@@ -1,0 +1,179 @@
+<view class="page">
+  <!-- 顶部旅程信息 -->
+  <view class="trip-header" wx:if="{{trip}}">
+    <view class="trip-header-info" bindtap="onTripSettingTap">
+      <view class="trip-name">
+        {{trip.name}}
+        <text class="edit-hint">›</text>
+      </view>
+      <view class="trip-date">{{trip.startDate}} 至 {{trip.endDate}}</view>
+    </view>
+    <!-- 右侧入口：路线总览大图 + 行程地图 -->
+    <view class="trip-header-actions">
+      <view class="trip-map-btn" catchtap="onMapTap">行程总览</view>
+      <view class="trip-map-btn" catchtap="onMapPageTap">地图</view>
+    </view>
+  </view>
+
+  <!-- 倒计时卡片 -->
+  <view class="countdown-card countdown-{{countdown.mode}}" wx:if="{{countdown}}">
+    <view class="countdown-text">{{countdown.text}}</view>
+    <view class="countdown-value">
+      <text class="countdown-num">{{countdown.value}}</text>
+      <text class="countdown-unit">{{countdown.unit}}</text>
+    </view>
+  </view>
+
+  <!-- 准备进度：汇总所有行程项的待办 -->
+  <view class="prep-card" wx:if="{{prepTotal > 0}}">
+    <view class="prep-head" bindtap="onPrepToggle">
+      <view class="prep-title">{{prepDone === prepTotal ? '准备就绪' : '准备进度'}}</view>
+      <view class="prep-right">
+        <text class="prep-count">{{prepDone}} / {{prepTotal}}</text>
+        <text class="prep-toggle">{{prepOpen ? '收起' : '展开'}}</text>
+      </view>
+    </view>
+    <view class="prep-bar">
+      <view
+        class="prep-bar-fill {{prepDone === prepTotal ? 'prep-bar-fill-done' : ''}}"
+        style="width: {{prepPercent}}%"
+      ></view>
+    </view>
+    <view class="prep-list" wx:if="{{prepOpen}}">
+      <!-- 只读展示：点勾选框不改状态，改待办去对应行程项编辑页 -->
+      <view
+        class="prep-item {{item.done ? 'prep-item-done' : ''}}"
+        wx:for="{{prepAll}}"
+        wx:key="key"
+      >
+        <view class="todo-box {{item.done ? 'todo-box-done' : ''}}">{{item.done ? '✓' : ''}}</view>
+        <view class="prep-item-body">
+          <view class="prep-item-text {{item.done ? 'prep-item-text-done' : ''}}">{{item.text}}<text class="todo-owner-tag" wx:if="{{item.ownerName}}">@{{item.ownerName}}</text></view>
+          <view class="prep-item-from">{{item.dateShort}} {{item.weekday}} · {{item.title}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 行程时间轴 -->
+  <view class="timeline" wx:if="{{totalItemCount > 0}}">
+    <view
+      wx:for="{{days}}"
+      wx:key="day"
+      id="day-{{item.day}}"
+      class="day-block {{item.day === scrollToDay ? 'day-block-active' : ''}}"
+    >
+      <view class="day-header">
+        <view class="day-title">
+          <text class="day-date-main">{{item.dateShort}} {{item.weekday}}</text>
+          <text class="day-badge" wx:if="{{item.day === scrollToDay}}">{{countdown.mode === 'before' ? '出发日' : (countdown.mode === 'during' ? '今天' : '最后一天')}}</text>
+        </view>
+        <view class="day-cost" wx:if="{{item.dayCost > 0}}">¥{{item.dayCostYuan}}</view>
+      </view>
+
+      <view class="day-items" wx:if="{{item.items.length > 0}}">
+        <view class="swipe-wrap" wx:for="{{item.items}}" wx:for-item="s" wx:key="_id">
+          <!-- 左滑区：只包住标题行，不包含下方待办 -->
+          <view class="swipe-main">
+            <!-- 左滑露出的删除按钮 -->
+            <view
+              class="swipe-delete"
+              catchtap="onDeleteTap"
+              data-id="{{s._id}}"
+              data-title="{{s.title}}"
+            >删除</view>
+
+            <view
+              class="schedule-item {{openSwipeId === s._id ? 'schedule-item-open' : ''}}"
+              bindtouchstart="onTouchStart"
+              bindtouchmove="onTouchMove"
+              bindtouchend="onTouchEnd"
+              bindtouchcancel="onTouchEnd"
+              bindtap="onItemTap"
+              data-id="{{s._id}}"
+            >
+              <view class="item-time">{{s.startTime || '--:--'}}</view>
+              <view class="item-icon" style="background: {{s.typeColor}}">{{s.typeIcon}}</view>
+              <view class="item-content">
+                <view class="item-title">{{s.title}}</view>
+                <view class="item-meta">
+                  <text class="item-type">{{s.typeName}}</text>
+                  <view
+                    wx:if="{{s.imageCount > 0}}"
+                    class="item-eyes"
+                    catchtap="onPreviewImages"
+                    data-id="{{s._id}}"
+                  >
+                    <image class="item-eyes-icon" mode="aspectFit" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODY4NjhCIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEgMTJzNC03IDExLTcgMTEgNyAxMSA3LTQgNy0xMSA3LTExLTctMTEtN3oiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIzIi8+PC9zdmc+" />
+                    <text>{{s.imageCount}}</text>
+                  </view>
+                </view>
+              </view>
+              <!-- 有选点坐标：点 icon 直接查看定位，不进详情 -->
+              <view
+                class="item-map-btn"
+                wx:if="{{s.hasCoord}}"
+                catchtap="onItemMapTap"
+                data-lat="{{s.latitude}}"
+                data-lng="{{s.longitude}}"
+                data-title="{{s.title}}"
+                data-loc="{{s.location}}"
+              >
+                <image class="item-map-icon" mode="aspectFit" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2QjM1IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDIxcy03LTUuMS03LTExYTcgNyAwIDAgMSAxNCAwYzAgNS45LTcgMTEtNyAxMXoiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEwIiByPSIyLjUiLz48L3N2Zz4=" />
+              </view>
+              <view
+                class="item-todo-badge {{s.todoDone === s.todoTotal ? 'item-todo-badge-done' : ''}}"
+                wx:if="{{s.todoTotal > 0}}"
+              >{{s.todoDone === s.todoTotal ? '✓ ' : ''}}{{s.todoDone}}/{{s.todoTotal}}</view>
+              <view class="item-cost" wx:if="{{s.costYuan}}">¥{{s.costYuan}}</view>
+            </view>
+          </view>
+
+          <!-- 待办与备忘：独立于左滑区，可直接勾选 -->
+          <view class="item-extra" wx:if="{{s.todoTotal > 0 || s.note}}">
+            <view
+              class="todo-row"
+              wx:for="{{s.todos}}"
+              wx:for-item="t"
+              wx:key="id"
+              catchtap="onTodoTap"
+              data-sid="{{s._id}}"
+              data-tid="{{t.id}}"
+            >
+              <view class="todo-box {{t.done ? 'todo-box-done' : ''}}">{{t.done ? '✓' : ''}}</view>
+              <text class="todo-text {{t.done ? 'todo-text-done' : ''}}">{{t.text}}</text>
+              <text class="todo-owner-tag" wx:if="{{t.ownerName}}">@{{t.ownerName}}</text>
+            </view>
+            <view class="item-note" wx:if="{{s.note}}">
+              <text class="item-note-label">备忘</text>
+              <text class="item-note-text">{{s.note}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="day-empty" wx:else>
+        <text>当天暂无安排，点右下角 + 添加</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态：旅程还没排任何行程 -->
+  <view class="empty" wx:if="{{!loading && totalItemCount === 0}}">
+    <view class="empty-icon">🧭</view>
+    <view>还没有行程安排</view>
+    <view class="empty-hint">点右下角 + 添加第一项</view>
+  </view>
+
+  <view class="swipe-tip" wx:if="{{totalItemCount > 0}}">左滑行程项可删除</view>
+
+  <view class="bottom-space"></view>
+</view>
+
+<!-- 悬浮新增按钮 -->
+<view class="fab" bindtap="onAddTap">+</view>
+
+<!-- 加载态 -->
+<view class="loading-mask" wx:if="{{loading}}">
+  <view class="loading-text">加载中...</view>
+</view>

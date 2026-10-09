@@ -1,0 +1,24 @@
+<view class="page">
+  <!-- 个人信息卡片 -->
+  <view class="profile-card" wx:if="{{member}}">
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image wx:if="{{member.avatarFileID}}" class="avatar-img" src="{{member.avatarFileID}}" mode="aspectFill" />
+      <view wx:else class="avatar">{{avatarText}}</view>
+    </button>
+    <view class="profile-info">
+      <view class="name">{{member.name}}</view>
+      <view class="subtitle" wx:if="{{trip}}">{{trip.name}}</view>
+    </view>
+  </view>
+
+  <!-- 菜单 -->
+  <view class="menu-card">
+    <view class="menu-item" bindtap="onTripSettingTap">
+      <view class="menu-icon">⚙️</view>
+      <view class="menu-label">旅程设置</view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="tips">更多功能开发中...</view>
+</view>

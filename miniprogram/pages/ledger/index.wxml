@@ -1,0 +1,73 @@
+<view class="page">
+  <!-- 顶部总览 -->
+  <view class="summary-card">
+    <view class="summary-label">{{summaryLabel}}</view>
+    <view class="summary-amount">¥ {{totalCostYuan}}</view>
+    <view class="summary-meta">共 {{recordCount}} 笔</view>
+  </view>
+
+  <!-- 分类筛选（横向滚动） -->
+  <scroll-view class="category-bar" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="category-inner">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="chip {{activeCategory === item.key ? 'chip-active' : ''}}"
+        bindtap="onCategoryTap"
+        data-key="{{item.key}}"
+      >{{item.name}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 流水列表 -->
+  <view class="record-list">
+    <view wx:if="{{!loading && groupedRecords.length === 0}}" class="empty">
+      <view class="empty-icon">📝</view>
+      <block wx:if="{{activeCategory === 'all'}}">
+        <view>还没有账单，点右下角 + 记一笔</view>
+      </block>
+      <block wx:else>
+        <view>该分类下还没有账单</view>
+        <view class="empty-hint">换个分类看看，或点右下角 + 记一笔</view>
+      </block>
+    </view>
+
+    <view wx:for="{{groupedRecords}}" wx:key="date" class="day-group">
+      <view class="day-header">
+        <view class="day-label">{{item.dateLabel}} · {{item.weekday}}</view>
+        <view class="day-total">¥{{item.dayTotalYuan}}</view>
+      </view>
+
+      <view class="record-card">
+        <view
+          class="record-item"
+          wx:for="{{item.items}}"
+          wx:for-item="r"
+          wx:key="_id"
+          bindtap="onRecordTap"
+          data-id="{{r._id}}"
+        >
+          <view class="record-icon" style="background: {{r.categoryColor}}">{{r.categoryIcon}}</view>
+          <view class="record-content">
+            <view class="record-note">{{r.note || r.categoryName}}</view>
+            <view class="record-meta">
+              <text>{{r.payerName}} 付</text>
+              <text wx:if="{{r.participantCount > 0}}"> · {{r.participantCount}} 人参与</text>
+            </view>
+          </view>
+          <view class="record-amount">¥{{r.amountYuan}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-space"></view>
+  </view>
+
+  <!-- 悬浮记账按钮 -->
+  <view class="fab" bindtap="onAddTap">+</view>
+
+  <!-- 加载态 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+</view>

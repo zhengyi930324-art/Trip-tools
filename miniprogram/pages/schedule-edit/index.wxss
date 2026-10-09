@@ -1,0 +1,399 @@
+/* pages/schedule-edit/index.wxss */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 32rpx 200rpx;
+}
+
+/* 区块 */
+.section {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 26rpx;
+  color: #86868B;
+  margin-bottom: 20rpx;
+}
+
+/* 标题右侧的辅助说明 */
+.label-hint {
+  font-size: 22rpx;
+  color: #FF6B35;
+}
+
+/* 关联账目 */
+.cost-desc {
+  font-size: 22rpx;
+  color: #B0B0B5;
+  line-height: 1.6;
+  padding-bottom: 8rpx;
+}
+
+.cost-empty {
+  font-size: 24rpx;
+  color: #B0B0B5;
+  line-height: 1.6;
+  padding: 8rpx 0;
+}
+
+/* 未选账目时的占位文字 */
+.form-label-muted {
+  color: #86868B;
+}
+
+/* 表单行 */
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #1D1D1F;
+}
+
+.form-value {
+  font-size: 28rpx;
+  color: #86868B;
+}
+
+.form-divider {
+  height: 1rpx;
+  background: #F5F5F7;
+  margin: 8rpx 0;
+}
+
+/* 类型网格 */
+.type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.type-item {
+  width: calc((100% - 64rpx) / 5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 0;
+  border-radius: 16rpx;
+  transition: all 0.2s;
+}
+
+.type-item.active {
+  background: #FFF8F5;
+}
+
+.type-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 500;
+  margin-bottom: 8rpx;
+  transition: all 0.2s;
+}
+
+.type-name {
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+.type-item.active .type-name {
+  color: #FF6B35;
+  font-weight: 500;
+}
+
+/* 文本输入 */
+.text-input {
+  width: 100%;
+  height: 80rpx;
+  background: #F5F5F7;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+/* 地点行：只读名称 + 地图选点/查看按钮 */
+.location-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.location-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: #1D1D1F;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.location-name-empty {
+  color: #C7C7CC;
+}
+
+.location-pick-btn {
+  flex-shrink: 0;
+  padding: 12rpx 24rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 107, 53, 0.1);
+  color: #FF6B35;
+  font-size: 24rpx;
+}
+
+.location-pick-btn:active {
+  background: rgba(255, 107, 53, 0.2);
+}
+
+.note-textarea {
+  width: 100%;
+  min-height: 120rpx;
+  background: #F5F5F7;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.input-placeholder {
+  color: #C7C7CC;
+}
+
+.bottom-space {
+  height: 40rpx;
+}
+
+/* 操作栏 */
+.action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+  padding: 24rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 16rpx;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.04);
+  z-index: 100;
+}
+
+.btn-save {
+  flex: 1;
+  height: 88rpx;
+  background: #FF6B35;
+  color: #FFFFFF;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 88rpx;
+  padding: 0;
+  border: none;
+}
+
+.btn-save::after {
+  border: none;
+}
+
+.btn-save[disabled] {
+  opacity: 0.6;
+  background: #FF6B35;
+  color: #FFFFFF;
+}
+
+.btn-delete {
+  width: 160rpx;
+  height: 88rpx;
+  background: #FFFFFF;
+  color: #FF3B30;
+  border: 2rpx solid #FF3B30;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  line-height: 84rpx;
+  padding: 0;
+}
+
+.btn-delete::after {
+  border: none;
+}
+
+/* 待办清单编辑 */
+.todo-edit-list {
+  margin-bottom: 16rpx;
+}
+
+.todo-edit-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid #F5F5F7;
+}
+
+.todo-edit-row:last-child {
+  border-bottom: none;
+}
+
+.todo-edit-text {
+  flex: 1;
+  min-width: 0;
+  margin-left: 18rpx;
+  font-size: 28rpx;
+  color: #1D1D1F;
+  word-break: break-all;
+}
+
+.todo-edit-text-done {
+  color: #B0B0B5;
+  text-decoration: line-through;
+}
+
+.todo-owner {
+  flex-shrink: 0;
+  max-width: 160rpx;
+  margin-left: 12rpx;
+  padding: 0 12rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  border-radius: 20rpx;
+  background: #F5F5F7;
+  color: #86868B;
+  font-size: 22rpx;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.todo-owner-on {
+  background: #FFEDE6;
+  color: #FF6B35;
+}
+
+.todo-edit-del {
+  flex-shrink: 0;
+  width: 48rpx;
+  margin-left: 12rpx;
+  font-size: 36rpx;
+  color: #C7C7CC;
+  text-align: center;
+}
+
+.todo-add-row {
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+.todo-add-input {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  padding: 0 20rpx;
+  background: #F5F5F7;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+
+.todo-add-btn {
+  flex-shrink: 0;
+  height: 72rpx;
+  margin-left: 16rpx;
+  padding: 0 28rpx;
+  background: #FF6B35;
+  border-radius: 16rpx;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  line-height: 72rpx;
+}
+
+.todo-add-btn:active {
+  opacity: 0.85;
+}
+
+/* 附件图片（与账单页同款） */
+.image-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.image-add {
+  width: 160rpx;
+  height: 160rpx;
+  background: #F5F5F7;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #86868B;
+  border: 2rpx dashed #E5E5EA;
+}
+
+.image-add:active {
+  background: #E5E5EA;
+}
+
+/* 上传中：置灰并禁用点击反馈 */
+.image-add-busy {
+  opacity: 0.6;
+  border-color: #FF6B35;
+  color: #FF6B35;
+}
+
+.image-add-busy:active {
+  background: #F5F5F7;
+}
+
+.image-add-icon {
+  font-size: 48rpx;
+  line-height: 1;
+  margin-bottom: 8rpx;
+}
+
+.image-add-text {
+  font-size: 22rpx;
+}
+
+.image-preview {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx;
+}
+
+.image-remove {
+  position: absolute;
+  top: -12rpx;
+  right: -12rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: #FF3B30;
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  line-height: 1;
+}

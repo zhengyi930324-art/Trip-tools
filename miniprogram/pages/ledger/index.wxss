@@ -1,0 +1,161 @@
+/* pages/ledger/index.wxss */
+.page {
+  min-height: 100vh;
+  padding-bottom: 160rpx;
+}
+
+/* 顶部总览 */
+.summary-card {
+  margin: 24rpx 32rpx;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8F65 100%);
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  color: #FFFFFF;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.25);
+}
+
+.summary-label {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-bottom: 12rpx;
+}
+
+.summary-amount {
+  font-size: 64rpx;
+  font-weight: 700;
+  font-family: 'Menlo', monospace;
+  line-height: 1.1;
+  margin-bottom: 8rpx;
+}
+
+.summary-meta {
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
+/* 分类筛选 */
+.category-bar {
+  white-space: nowrap;
+  padding: 0 32rpx 16rpx;
+}
+
+.category-inner {
+  display: inline-flex;
+  gap: 16rpx;
+}
+
+/* 流水列表 */
+.record-list {
+  padding: 0 32rpx;
+}
+
+.day-group {
+  margin-bottom: 32rpx;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 8rpx;
+}
+
+.day-label {
+  font-size: 26rpx;
+  color: #86868B;
+  font-weight: 500;
+}
+
+.day-total {
+  font-size: 26rpx;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+  font-weight: 500;
+}
+
+.record-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: 28rpx;
+  border-bottom: 1rpx solid #F5F5F7;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-item:active {
+  background: #F5F5F7;
+}
+
+.record-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.record-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-note {
+  font-size: 30rpx;
+  color: #1D1D1F;
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-meta {
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+.record-amount {
+  font-size: 32rpx;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+  font-weight: 600;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+.bottom-space {
+  height: 40rpx;
+}
+
+/* 加载态 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #86868B;
+}

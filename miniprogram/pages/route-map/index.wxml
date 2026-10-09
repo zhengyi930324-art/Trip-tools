@@ -1,0 +1,12 @@
+<movable-area class="viewer-area">
+  <movable-view
+    class="viewer-view"
+    direction="all"
+    scale
+    scale-min="1"
+    scale-max="5"
+    inertia
+  >
+    <image class="viewer-img" src="{{src}}" mode="aspectFit" />
+  </movable-view>
+</movable-area>

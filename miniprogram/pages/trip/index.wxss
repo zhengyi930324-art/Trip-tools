@@ -1,0 +1,516 @@
+/* pages/trip/index.wxss */
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 顶部旅程信息 */
+.trip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 32rpx 24rpx;
+  /* 路线图打底 + 半透明橙罩，保证白字可读 */
+  background:
+    linear-gradient(180deg, rgba(255, 107, 53, 0.78) 0%, rgba(255, 143, 101, 0.66) 100%),
+    url('../../assets/route-map.jpg') center / cover no-repeat;
+  color: #FFFFFF;
+}
+
+/* 头部右侧入口按钮组 */
+.trip-header-actions {
+  display: flex;
+  gap: 12rpx;
+  flex-shrink: 0;
+  margin-left: 24rpx;
+}
+
+.trip-map-btn {
+  flex-shrink: 0;
+  padding: 10rpx 26rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.22);
+  border: 2rpx solid rgba(255, 255, 255, 0.65);
+  color: #FFFFFF;
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.trip-map-btn:active {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.trip-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.trip-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  display: flex;
+  align-items: center;
+}
+
+.edit-hint {
+  margin-left: 12rpx;
+  font-size: 32rpx;
+  opacity: 0.7;
+}
+
+.trip-date {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+/* 倒计时卡片 */
+.countdown-card {
+  margin: -20rpx 32rpx 24rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 2;
+}
+
+.countdown-text {
+  font-size: 26rpx;
+  color: #86868B;
+  margin-bottom: 16rpx;
+}
+
+.countdown-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.countdown-num {
+  font-size: 88rpx;
+  font-weight: 700;
+  color: #FF6B35;
+  font-family: 'Menlo', monospace;
+  line-height: 1;
+}
+
+.countdown-unit {
+  font-size: 28rpx;
+  color: #86868B;
+  margin-left: 12rpx;
+}
+
+.countdown-during .countdown-num { color: #34C759; }
+.countdown-after .countdown-num { color: #86868B; }
+
+/* 时间轴 */
+.timeline {
+  padding: 0 32rpx;
+}
+
+.day-block {
+  margin-bottom: 32rpx;
+  scroll-margin-top: 20rpx;
+}
+
+.day-block-active .day-header {
+  background: linear-gradient(90deg, #FFF0E8 0%, #FFFFFF 100%);
+  border-left: 6rpx solid #FF6B35;
+}
+
+.day-header {
+  background: #FFFFFF;
+  border-radius: 16rpx 16rpx 0 0;
+  padding: 24rpx 28rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 6rpx solid transparent;
+}
+
+.day-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.day-date-main {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+}
+
+.day-badge {
+  margin-left: 12rpx;
+  padding: 4rpx 12rpx;
+  background: #FF6B35;
+  color: #FFFFFF;
+  font-size: 20rpx;
+  border-radius: 8rpx;
+}
+
+.day-cost {
+  font-size: 28rpx;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+  font-weight: 500;
+}
+
+.day-items {
+  background: #FFFFFF;
+  border-radius: 0 0 16rpx 16rpx;
+  padding: 8rpx 0;
+  overflow: hidden;
+}
+
+/* 左滑删除：外层分隔线 + swipe-main 定位裁剪 + 底层删除按钮 + 上层可滑动内容 */
+.swipe-wrap {
+  border-top: 1rpx solid #F5F5F7;
+}
+
+/* 左滑裁剪只作用于标题行，下方待办区不参与位移 */
+.swipe-main {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 140rpx;
+  background: #FF3B30;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swipe-delete:active {
+  background: #D70015;
+}
+
+.schedule-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  background: #FFFFFF;
+  transform: translateX(0);
+  transition: transform 0.24s ease-out;
+}
+
+.schedule-item-open {
+  transform: translateX(-140rpx);
+}
+
+.schedule-item:active {
+  background: #F5F5F7;
+}
+
+.item-time {
+  width: 90rpx;
+  font-size: 24rpx;
+  color: #86868B;
+  font-family: 'Menlo', monospace;
+  flex-shrink: 0;
+}
+
+.item-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 500;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 28rpx;
+  color: #1D1D1F;
+  margin-bottom: 4rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-meta {
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+.item-cost {
+  font-size: 26rpx;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+/* 行程项地图定位入口（有选点坐标才显示） */
+.item-map-btn {
+  flex-shrink: 0;
+  width: 48rpx;
+  height: 48rpx;
+  margin-left: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.item-map-btn:active {
+  background: rgba(255, 107, 53, 0.25);
+}
+
+.item-map-icon {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+/* 行程项待办进度徽章 */
+.item-todo-badge {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 20rpx;
+  background: #FFF0E8;
+  color: #FF6B35;
+  font-size: 22rpx;
+  font-family: 'Menlo', monospace;
+}
+
+.item-todo-badge-done {
+  background: #E8F8EC;
+  color: #34C759;
+}
+
+/* 待办与备忘区 */
+.item-extra {
+  padding: 4rpx 28rpx 16rpx 146rpx;
+  background: #FFFFFF;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  padding: 10rpx 0;
+}
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  color: #3A3A3C;
+  word-break: break-all;
+}
+
+.item-eyes {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10rpx;
+  font-size: 22rpx;
+  color: #86868B;
+  vertical-align: middle;
+}
+
+.item-eyes-icon {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 6rpx;
+}
+
+.todo-owner-tag {
+  flex-shrink: 0;
+  margin-left: 10rpx;
+  color: #FF6B35;
+  font-size: 22rpx;
+}
+
+.todo-text-done {
+  color: #B0B0B5;
+  text-decoration: line-through;
+}
+
+.item-note {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 10rpx;
+  padding-top: 10rpx;
+  border-top: 1rpx dashed #ECECEE;
+}
+
+.item-note-label {
+  flex-shrink: 0;
+  margin-right: 12rpx;
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+.item-note-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 24rpx;
+  color: #6E6E73;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+/* 准备进度卡片 */
+.prep-card {
+  margin: 20rpx 32rpx 24rpx;
+  padding: 24rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.prep-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prep-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+}
+
+.prep-right {
+  display: flex;
+  align-items: center;
+}
+
+.prep-count {
+  font-family: 'Menlo', monospace;
+  font-size: 28rpx;
+  color: #004E89;
+}
+
+.prep-toggle {
+  margin-left: 16rpx;
+  font-size: 24rpx;
+  color: #FF6B35;
+}
+
+.prep-bar {
+  height: 10rpx;
+  margin-top: 18rpx;
+  border-radius: 6rpx;
+  background: #F0F0F2;
+  overflow: hidden;
+}
+
+.prep-bar-fill {
+  height: 100%;
+  border-radius: 6rpx;
+  background: #FF6B35;
+  transition: width 0.3s ease-out;
+}
+
+.prep-bar-fill-done {
+  background: #34C759;
+}
+
+.prep-list {
+  margin-top: 16rpx;
+  padding-top: 8rpx;
+  border-top: 1rpx solid #F5F5F7;
+}
+
+.prep-item {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+}
+
+/* 已完成待办：整行置灰 */
+.prep-item-done {
+  opacity: 0.55;
+}
+
+.prep-item-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 16rpx;
+}
+
+.prep-item-text {
+  font-size: 27rpx;
+  color: #1D1D1F;
+  word-break: break-all;
+}
+
+.prep-item-text-done {
+  text-decoration: line-through;
+}
+
+.prep-item-from {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+.day-empty {
+  background: #FFFFFF;
+  border-radius: 0 0 16rpx 16rpx;
+  padding: 40rpx 28rpx;
+  text-align: center;
+  color: #C7C7CC;
+  font-size: 24rpx;
+  border-top: 1rpx solid #F5F5F7;
+}
+
+.swipe-tip {
+  text-align: center;
+  font-size: 22rpx;
+  color: #C7C7CC;
+  padding: 8rpx 32rpx 0;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #C7C7CC;
+  margin-top: 12rpx;
+}
+
+.bottom-space {
+  height: 160rpx;
+}
+
+/* 加载态 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #86868B;
+}

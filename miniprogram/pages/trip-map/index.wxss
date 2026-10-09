@@ -1,0 +1,106 @@
+/* pages/trip-map/index.wxss */
+.map-page {
+  position: relative;
+  height: 100vh;
+}
+
+.trip-map {
+  width: 100%;
+  height: 100vh;
+}
+
+/* 点 marker 后的底部浮层卡片 */
+.map-card {
+  position: fixed;
+  left: 32rpx;
+  right: 32rpx;
+  bottom: 48rpx;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
+}
+
+.map-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.map-card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+}
+
+.map-card-close {
+  padding: 0 12rpx;
+  font-size: 36rpx;
+  color: #86868B;
+}
+
+.map-card-meta {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #86868B;
+}
+
+.map-card-nav {
+  margin-top: 16rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  text-align: center;
+  border-radius: 36rpx;
+  background: #FF6B35;
+  color: #FFFFFF;
+  font-size: 28rpx;
+}
+
+.map-card-nav:active {
+  opacity: 0.85;
+}
+
+/* 空态浮层 */
+.map-empty {
+  position: fixed;
+  top: 50%;
+  left: 64rpx;
+  right: 64rpx;
+  transform: translateY(-50%);
+  text-align: center;
+  color: #86868B;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 48rpx 0;
+  border-radius: 20rpx;
+}
+
+.map-empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+  opacity: 0.5;
+}
+
+.map-empty-hint {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 加载态 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #86868B;
+}

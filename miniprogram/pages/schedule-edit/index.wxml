@@ -1,0 +1,176 @@
+<view class="page">
+  <!-- 日期选择 -->
+  <view class="section">
+    <picker mode="selector" range="{{dayRange}}" value="{{dayIndex}}" bindchange="onDayChange">
+      <view class="form-row">
+        <view class="form-label">日期</view>
+        <view class="form-value">{{dayRange[dayIndex]}} ›</view>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 时间 -->
+  <view class="section">
+    <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
+      <view class="form-row">
+        <view class="form-label">开始时间</view>
+        <view class="form-value">{{startTime || '选择时间'}} ›</view>
+      </view>
+    </picker>
+    <view class="form-divider"></view>
+    <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
+      <view class="form-row">
+        <view class="form-label">结束时间（可选）</view>
+        <view class="form-value">{{endTime || '选择时间'}} ›</view>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 类型 -->
+  <view class="section">
+    <view class="section-label">类型</view>
+    <view class="type-grid">
+      <view
+        wx:for="{{types}}"
+        wx:key="key"
+        class="type-item {{type === item.key ? 'active' : ''}}"
+        bindtap="onTypeTap"
+        data-key="{{item.key}}"
+      >
+        <view
+          class="type-icon"
+          style="background: {{type === item.key ? item.color : '#F5F5F7'}}; color: {{type === item.key ? '#FFFFFF' : '#86868B'}}"
+        >{{item.icon}}</view>
+        <view class="type-name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 标题 -->
+  <view class="section">
+    <view class="section-label">标题 *</view>
+    <input
+      class="text-input"
+      placeholder="例如：亚丁景区门票"
+      placeholder-class="input-placeholder"
+      value="{{title}}"
+      bindinput="onTitleInput"
+      maxlength="50"
+    />
+  </view>
+
+  <!-- 地点：仅地图选点，不支持手输；选点回填名称与坐标 -->
+  <view class="section">
+    <view class="section-label">地点（可选）</view>
+    <view class="location-row">
+      <view class="location-name {{location ? '' : 'location-name-empty'}}">{{location || '未选择'}}</view>
+      <view class="location-pick-btn" wx:if="{{latitude !== null}}" catchtap="onViewLocation">查看地图</view>
+      <view class="location-pick-btn" catchtap="onChooseLocation">{{latitude !== null ? '重新选点' : '地图选点'}}</view>
+    </view>
+  </view>
+
+  <!-- 待办清单 -->
+  <view class="section">
+    <view class="section-label">
+      <text>待办清单（可选）</text>
+      <text class="label-hint" wx:if="{{todos.length > 0}}">{{todoDoneCount}}/{{todos.length}} 已完成</text>
+    </view>
+
+    <view class="todo-edit-list" wx:if="{{todos.length > 0}}">
+      <view class="todo-edit-row" wx:for="{{todos}}" wx:key="id">
+        <view
+          class="todo-box {{item.done ? 'todo-box-done' : ''}}"
+          catchtap="onTodoToggle"
+          data-index="{{index}}"
+        >{{item.done ? '✓' : ''}}</view>
+        <text class="todo-edit-text {{item.done ? 'todo-edit-text-done' : ''}}">{{item.text}}</text>
+        <view
+          class="todo-owner {{item.ownerName ? 'todo-owner-on' : ''}}"
+          catchtap="onTodoOwnerTap"
+          data-index="{{index}}"
+        >{{item.ownerName ? '@' + item.ownerName : '@'}}</view>
+        <view class="todo-edit-del" catchtap="onTodoDelete" data-index="{{index}}">×</view>
+      </view>
+    </view>
+
+    <view class="todo-add-row">
+      <input
+        class="todo-add-input"
+        placeholder="例如：买火车票、订酒店"
+        placeholder-class="input-placeholder"
+        value="{{todoInput}}"
+        bindinput="onTodoInput"
+        bindconfirm="onTodoAdd"
+        confirm-type="done"
+        maxlength="60"
+      />
+      <view class="todo-add-btn" bindtap="onTodoAdd">添加</view>
+    </view>
+  </view>
+
+  <!-- 备忘 -->
+  <view class="section">
+    <view class="section-label">备忘（可选）</view>
+    <textarea
+      class="note-textarea"
+      placeholder="例如：车次 G1234、酒店确认号 xxx"
+      placeholder-class="input-placeholder"
+      value="{{note}}"
+      bindinput="onNoteInput"
+      maxlength="200"
+      auto-height
+    />
+  </view>
+
+  <!-- 附件图片（可选）：最多 9 张，点缩略图放大 -->
+  <view class="section">
+    <view class="section-label">附件图片（可选）</view>
+    <view class="image-wrap">
+      <view wx:for="{{imageFileIDs}}" wx:key="*this" class="image-preview">
+        <image src="{{item}}" mode="aspectFill" class="preview-img" bindtap="onPreviewImage" data-idx="{{index}}" />
+        <view class="image-remove" catchtap="onRemoveImage" data-idx="{{index}}">×</view>
+      </view>
+      <view wx:if="{{imageFileIDs.length < 9}}" class="image-add {{uploading ? 'image-add-busy' : ''}}" bindtap="onChooseImage">
+        <text class="image-add-icon">{{uploading ? '…' : '+'}}</text>
+        <text class="image-add-text">{{uploading ? '上传中' : '上传'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 关联账目（可选）：把这一项和一笔未关联的账挂钩，行程上就能显示金额；选择器挑选，账目多也不撑页面 -->
+  <view class="section">
+    <view class="section-label">
+      <text>关联账目（可选）</text>
+      <text class="label-hint" wx:if="{{costRecordId}}">选择器里可重选或清除</text>
+    </view>
+    <view class="cost-desc">把一笔花销挂到这个行程节点上，行程页会直接显示金额；从所有还没关联行程的账目里挑一笔（日期为实际发生日期）</view>
+    <view wx:if="{{recordOptions.length === 0}}" class="cost-empty">
+      还没有可关联的账目，可先去「账单」Tab 记一笔
+    </view>
+    <picker
+      wx:else
+      mode="selector"
+      range="{{recordPickerRange}}"
+      value="{{costRecordIndex > -1 ? costRecordIndex : 0}}"
+      bindchange="onCostRecordChange"
+    >
+      <view class="form-row">
+        <view class="form-label {{costRecordId ? '' : 'form-label-muted'}}">{{costSummary || '选择账目'}}</view>
+        <view class="form-value">›</view>
+      </view>
+    </picker>
+  </view>
+
+  <view class="bottom-space"></view>
+
+  <!-- 操作栏 -->
+  <view class="action-bar">
+    <button
+      class="btn-save"
+      bindtap="onSave"
+      loading="{{saving}}"
+      disabled="{{saving || loading || uploading}}"
+    >{{isEdit ? '保存修改' : '添加'}}</button>
+    <button wx:if="{{isEdit}}" class="btn-delete" bindtap="onDelete">删除</button>
+  </view>
+</view>

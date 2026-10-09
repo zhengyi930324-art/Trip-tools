@@ -1,0 +1,45 @@
+<view class="page">
+  <!-- 旅程名字 -->
+  <view class="section">
+    <view class="section-label">旅程名字</view>
+    <input
+      class="text-input"
+      placeholder="例如：国庆川西行"
+      placeholder-class="input-placeholder"
+      value="{{name}}"
+      bindinput="onNameInput"
+      maxlength="30"
+    />
+  </view>
+
+  <!-- 日期 -->
+  <view class="section">
+    <picker mode="date" value="{{startDate}}" bindchange="onStartDateChange">
+      <view class="form-row">
+        <view class="form-label">出发日期</view>
+        <view class="form-value">{{startDate || '选择日期'}} ›</view>
+      </view>
+    </picker>
+    <view class="form-divider"></view>
+    <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
+      <view class="form-row">
+        <view class="form-label">返回日期</view>
+        <view class="form-value">{{endDate || '选择日期'}} ›</view>
+      </view>
+    </picker>
+  </view>
+
+  <view class="tips">修改日期后，行程天数会自动调整</view>
+
+  <view class="bottom-space"></view>
+
+  <!-- 保存按钮 -->
+  <view class="action-bar">
+    <button
+      class="btn-save"
+      bindtap="onSave"
+      loading="{{saving}}"
+      disabled="{{saving}}"
+    >保存</button>
+  </view>
+</view>

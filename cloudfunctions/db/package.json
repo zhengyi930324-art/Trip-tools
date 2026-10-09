@@ -1,0 +1,9 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "出去撒欢 · 统一 CRUD 云函数（records/schedule/trip/members）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

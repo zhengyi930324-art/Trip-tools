@@ -1,0 +1,19 @@
+/* pages/route-map/index.wxss */
+.viewer-area {
+  width: 100vw;
+  height: 100vh;
+  background: #1D1D1F;
+}
+
+.viewer-view {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viewer-img {
+  width: 100vw;
+  height: 100vh;
+}

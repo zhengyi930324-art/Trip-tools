@@ -1,0 +1,34 @@
+<view class="map-page">
+  <map
+    id="tripMap"
+    class="trip-map"
+    latitude="{{centerLat}}"
+    longitude="{{centerLng}}"
+    scale="10"
+    markers="{{markers}}"
+    polyline="{{polyline}}"
+    bindmarkertap="onMarkerTap"
+  ></map>
+
+  <!-- 点 marker 后的底部浮层卡片 -->
+  <view class="map-card" wx:if="{{activeItem}}">
+    <view class="map-card-head">
+      <view class="map-card-title">{{activeItem.title}}</view>
+      <view class="map-card-close" catchtap="onCloseCard">×</view>
+    </view>
+    <view class="map-card-meta">{{activeItem.dateLabel}}{{activeItem.startTime ? ' ' + activeItem.startTime : ''}} · {{activeItem.location || '无地点名'}}</view>
+    <view class="map-card-nav" catchtap="onNavigate">导航</view>
+  </view>
+
+  <!-- 空态：还没有任何坐标点 -->
+  <view class="map-empty" wx:if="{{!loading && pointCount === 0}}">
+    <view class="map-empty-icon">🗺️</view>
+    <view>行程还没有地点坐标</view>
+    <view class="map-empty-hint">编辑行程时用「地图选点」添加</view>
+  </view>
+
+  <!-- 加载态 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+</view>

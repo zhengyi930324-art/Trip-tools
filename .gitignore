@@ -1,0 +1,8 @@
+# 系统文件
+.DS_Store
+
+# 依赖
+node_modules/
+
+# 微信开发者工具个人配置（每台机器不同，不入库）
+project.private.config.json

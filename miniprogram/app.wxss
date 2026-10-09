@@ -1,0 +1,169 @@
+/* app.wxss · 全局样式 */
+page {
+  background: #F5F5F7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 28rpx;
+  color: #1D1D1F;
+  line-height: 1.5;
+}
+
+/* 卡片 */
+.card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin: 24rpx 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.card-flat {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin: 0 32rpx 24rpx;
+}
+
+/* 金额 */
+.amount {
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-weight: 600;
+  color: #004E89;
+}
+
+.amount-large { font-size: 56rpx; }
+.amount-medium { font-size: 36rpx; }
+.amount-small { font-size: 28rpx; }
+
+/* 按钮 */
+.btn-primary {
+  background: #FF6B35;
+  color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.btn-primary:active { opacity: 0.8; }
+
+.btn-ghost {
+  background: transparent;
+  color: #FF6B35;
+  border: 2rpx solid #FF6B35;
+  border-radius: 16rpx;
+  padding: 22rpx;
+  text-align: center;
+  font-size: 32rpx;
+}
+
+/* 文字 */
+.text-secondary { color: #86868B; font-size: 24rpx; }
+.text-primary { color: #1D1D1F; }
+.text-income { color: #34C759; }
+.text-expense { color: #FF3B30; }
+.text-brand { color: #FF6B35; }
+
+/* 分割线 */
+.divider {
+  height: 1rpx;
+  background: #E5E5EA;
+  margin: 24rpx 0;
+}
+
+/* 空态 */
+.empty {
+  text-align: center;
+  padding: 120rpx 60rpx;
+  color: #86868B;
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.4;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #C7C7CC;
+  margin-top: 12rpx;
+}
+
+/* 悬浮按钮 */
+.fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 120rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #FF6B35;
+  color: #FFFFFF;
+  font-size: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 53, 0.4);
+  z-index: 100;
+}
+
+.fab:active { transform: scale(0.95); }
+
+/* 通用 flex */
+.row { display: flex; align-items: center; }
+.row-between { display: flex; align-items: center; justify-content: space-between; }
+.col { display: flex; flex-direction: column; }
+.flex-1 { flex: 1; }
+
+/* 标签 chips */
+.chip {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  border-radius: 32rpx;
+  background: #FFFFFF;
+  color: #86868B;
+  font-size: 26rpx;
+  margin-right: 16rpx;
+  border: 2rpx solid transparent;
+}
+
+.chip-active {
+  background: #FFF0E8;
+  color: #FF6B35;
+  border-color: #FF6B35;
+  font-weight: 500;
+}
+
+/* 分类色块 */
+.cat-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #FFFFFF;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* 待办勾选框（行程页与行程编辑页共用） */
+.todo-box {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  border: 3rpx solid #D1D1D6;
+  border-radius: 50%;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  font-size: 22rpx;
+  line-height: 30rpx;
+  text-align: center;
+}
+
+.todo-box-done {
+  background: #34C759;
+  border-color: #34C759;
+}

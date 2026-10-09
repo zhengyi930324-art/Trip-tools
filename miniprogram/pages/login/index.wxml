@@ -1,0 +1,39 @@
+<view class="login-page">
+  <view class="hero">
+    <view class="logo">出去撒欢</view>
+    <view class="slogan">和朋友一起记录旅程</view>
+  </view>
+
+  <view class="form">
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+      <view wx:else class="avatar-placeholder">+</view>
+      <view class="avatar-hint">{{avatarUrl ? '点击更换头像' : '点击使用微信头像'}}</view>
+    </button>
+
+    <view class="label">你叫什么名字？</view>
+    <input
+      class="input"
+      type="nickname"
+      placeholder="点输入框可一键用微信昵称"
+      placeholder-class="input-placeholder"
+      value="{{name}}"
+      bindinput="onInput"
+      bindblur="onInput"
+      maxlength="20"
+      confirm-type="done"
+      bindconfirm="onSubmit"
+    />
+
+    <button
+      class="btn-submit"
+      bindtap="onSubmit"
+      loading="{{loading}}"
+      disabled="{{loading}}"
+    >开始使用</button>
+
+    <view class="err" wx:if="{{errMsg}}">{{errMsg}}</view>
+  </view>
+
+  <view class="tips">头像和昵称都走微信官方授权：点上面头像弹框确认、点输入框一键填昵称；之后会自动登录</view>
+</view>

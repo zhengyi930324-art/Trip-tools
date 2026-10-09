@@ -1,0 +1,64 @@
+{
+  "pages": [
+    "pages/trip/index",
+    "pages/trip-map/index",
+    "pages/route-map/index",
+    "pages/ledger/index",
+    "pages/stats/index",
+    "pages/mine/index",
+    "pages/record-edit/index",
+    "pages/schedule-edit/index",
+    "pages/trip-setting/index",
+    "pages/login/index"
+  ],
+  "window": {
+    "backgroundColor": "#F5F5F7",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FF6B35",
+    "navigationBarTitleText": "出去撒欢",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#FF6B35",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/trip/index",
+        "text": "行程",
+        "iconPath": "assets/tabs/tab-trip.png",
+        "selectedIconPath": "assets/tabs/tab-trip-active.png"
+      },
+      {
+        "pagePath": "pages/ledger/index",
+        "text": "账单",
+        "iconPath": "assets/tabs/tab-ledger.png",
+        "selectedIconPath": "assets/tabs/tab-ledger-active.png"
+      },
+      {
+        "pagePath": "pages/stats/index",
+        "text": "统计",
+        "iconPath": "assets/tabs/tab-stats.png",
+        "selectedIconPath": "assets/tabs/tab-stats-active.png"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "assets/tabs/tab-mine.png",
+        "selectedIconPath": "assets/tabs/tab-mine-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "requiredPrivateInfos": [
+    "chooseLocation"
+  ],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于添加行程时在地图上选择地点坐标"
+    }
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

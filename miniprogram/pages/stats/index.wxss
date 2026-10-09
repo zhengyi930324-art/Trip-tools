@@ -1,0 +1,414 @@
+/* pages/stats/index.wxss */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 32rpx 160rpx;
+}
+
+/* 总览卡片 */
+.overview-card {
+  background: linear-gradient(135deg, #004E89 0%, #0066B3 100%);
+  border-radius: 24rpx;
+  padding: 48rpx 32rpx;
+  color: #FFFFFF;
+  text-align: center;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 78, 137, 0.25);
+}
+
+.overview-label {
+  font-size: 26rpx;
+  opacity: 0.85;
+  margin-bottom: 12rpx;
+}
+
+.overview-amount {
+  font-size: 72rpx;
+  font-weight: 700;
+  font-family: 'Menlo', monospace;
+  line-height: 1.1;
+  margin-bottom: 16rpx;
+}
+
+.overview-meta {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.overview-meta .dot {
+  margin: 0 12rpx;
+  opacity: 0.6;
+}
+
+/* 区块 */
+.section {
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin-bottom: 16rpx;
+  padding-left: 8rpx;
+  display: flex;
+  align-items: baseline;
+}
+
+.section-hint {
+  font-size: 22rpx;
+  color: #86868B;
+  font-weight: 400;
+  margin-left: 12rpx;
+}
+
+/* 环形饼图 */
+.pie-wrap {
+  position: relative;
+  width: 360rpx;
+  height: 360rpx;
+  margin: 8rpx auto 32rpx;
+}
+
+.pie-canvas {
+  width: 360rpx;
+  height: 360rpx;
+  display: block;
+}
+
+/* 环形中心的总额（不拦点击） */
+.pie-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.pie-center-label {
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+.pie-center-amount {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+  line-height: 1.3;
+}
+
+.pie-center-sub {
+  font-size: 20rpx;
+  color: #C7C7CC;
+}
+
+/* 分类金额列表 */
+.category-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 8rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  border-bottom: 1rpx solid #F5F5F7;
+}
+
+.category-item:last-child {
+  border-bottom: none;
+}
+
+.category-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 26rpx;
+  font-weight: 500;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.category-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-name {
+  font-size: 28rpx;
+  color: #1D1D1F;
+  margin-bottom: 8rpx;
+}
+
+.category-bar {
+  height: 8rpx;
+  background: #F5F5F7;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+
+.category-amount {
+  text-align: right;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+.amount-value {
+  font-size: 28rpx;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.amount-percent {
+  font-size: 22rpx;
+  color: #86868B;
+}
+
+/* 每人收支 */
+.balance-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 8rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.balance-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  border-bottom: 1rpx solid #F5F5F7;
+}
+
+.balance-block:last-child .balance-row {
+  border-bottom: none;
+}
+
+.balance-name {
+  width: 140rpx;
+  font-size: 28rpx;
+  color: #1D1D1F;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.balance-nums {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-paid,
+.balance-owed {
+  font-size: 22rpx;
+  color: #86868B;
+  font-family: 'Menlo', monospace;
+}
+
+.balance-badge {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-family: 'Menlo', monospace;
+}
+
+/* 应收=别人欠我（绿），应付=我欠别人（橙），持平=灰 */
+.balance-recv {
+  background: rgba(52, 199, 89, 0.12);
+  color: #34C759;
+}
+
+.balance-pay {
+  background: rgba(255, 107, 53, 0.12);
+  color: #FF6B35;
+}
+
+.balance-even {
+  background: #F5F5F7;
+  color: #86868B;
+}
+
+/* 每人明细 */
+.member-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 8rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.member-block {
+  padding: 24rpx 28rpx;
+  border-bottom: 1rpx solid #F5F5F7;
+}
+
+.member-block:last-child {
+  border-bottom: none;
+}
+
+.member-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.member-name {
+  font-size: 28rpx;
+  color: #1D1D1F;
+  font-weight: 500;
+}
+
+.member-paid {
+  font-size: 22rpx;
+  color: #86868B;
+  font-family: 'Menlo', monospace;
+}
+
+.member-records {
+  margin-top: 12rpx;
+}
+
+.member-record {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.balance-arrow {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  color: #C7C7CC;
+  font-size: 28rpx;
+}
+
+.balance-detail {
+  background: #FAFAFC;
+  padding: 4rpx 24rpx 16rpx;
+}
+
+.record-icon {
+  flex-shrink: 0;
+  width: 40rpx;
+  height: 40rpx;
+  margin-left: 12rpx;
+  border-radius: 10rpx;
+  color: #FFFFFF;
+  font-size: 22rpx;
+  line-height: 40rpx;
+  text-align: center;
+}
+
+.record-date {
+  width: 90rpx;
+  font-size: 22rpx;
+  color: #86868B;
+  font-family: 'Menlo', monospace;
+  flex-shrink: 0;
+}
+
+.record-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0 16rpx;
+  font-size: 24rpx;
+  color: #3A3A3C;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.record-amount {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: #004E89;
+  font-family: 'Menlo', monospace;
+}
+
+.member-empty {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #C7C7CC;
+}
+
+/* 空态 */
+.empty {
+  text-align: center;
+  padding: 120rpx 60rpx;
+  color: #86868B;
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.4;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  margin-top: 12rpx;
+  opacity: 0.7;
+}
+
+.export-btn {
+  margin: 8rpx 32rpx 0;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  color: #FF6B35;
+  font-size: 30rpx;
+  font-weight: 500;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.export-btn-busy {
+  opacity: 0.6;
+}
+
+.export-canvas {
+  position: fixed;
+  top: -10000px;
+  left: 0;
+  width: 375px;
+  height: 300px;
+}
+
+.bottom-space {
+  height: 40rpx;
+}
+
+/* 加载态 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #86868B;
+}

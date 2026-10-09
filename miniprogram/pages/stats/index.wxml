@@ -1,0 +1,98 @@
+<view class="page">
+  <!-- 总览卡片 -->
+  <view class="overview-card">
+    <view class="overview-label">总花销</view>
+    <view class="overview-amount">¥ {{totalYuan}}</view>
+    <view class="overview-meta">
+      <text>{{memberCount}} 人</text>
+      <text class="dot">·</text>
+      <text>{{count}} 笔</text>
+      <text class="dot">·</text>
+      <text>人均 ¥{{avgYuan}}</text>
+    </view>
+  </view>
+
+  <!-- 分类占比 -->
+  <view class="section" wx:if="{{categoryList.length > 0}}">
+    <view class="section-title">分类占比</view>
+
+    <!-- 环形饼图 -->
+    <view class="pie-wrap">
+      <canvas type="2d" id="catPie" class="pie-canvas"></canvas>
+      <view class="pie-center">
+        <view class="pie-center-label">总花销</view>
+        <view class="pie-center-amount">¥{{totalYuan}}</view>
+        <view class="pie-center-sub">{{categoryList.length}} 个分类</view>
+      </view>
+    </view>
+
+    <!-- 分类金额列表 -->
+    <view class="category-card">
+      <view class="category-item" wx:for="{{categoryList}}" wx:key="key">
+        <view class="category-icon" style="background: {{item.color}}">{{item.icon}}</view>
+        <view class="category-info">
+          <view class="category-name">{{item.name}}</view>
+          <view class="category-bar">
+            <view class="category-bar-fill" style="width: {{item.percent}}%; background: {{item.color}}"></view>
+          </view>
+        </view>
+        <view class="category-amount">
+          <view class="amount-value">¥{{item.amountYuan}}</view>
+          <view class="amount-percent">{{item.percent}}%</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 每人收支：已付、应付与差额 -->
+  <view class="section" wx:if="{{balances.length > 0}}">
+    <view class="section-title">每人收支</view>
+    <view class="balance-card">
+      <view class="balance-block" wx:for="{{balances}}" wx:key="memberId">
+        <view class="balance-row" bindtap="onMemberTap" data-id="{{item.memberId}}">
+          <view class="balance-name">{{item.name}}</view>
+          <view class="balance-nums">
+            <text class="balance-paid">已付 ¥{{item.paidYuan}}</text>
+            <text class="balance-owed">应付 ¥{{item.owedYuan}}</text>
+          </view>
+          <view class="balance-badge balance-{{item.diffType}}">{{item.diffText}}</view>
+          <view class="balance-arrow">{{openMemberId === item.memberId ? '⌄' : '›'}}</view>
+        </view>
+        <!-- 展开后：这个人自己付的每一笔（分类 / 备注 / 金额 / 日期） -->
+        <view class="balance-detail" wx:if="{{openMemberId === item.memberId}}">
+          <view class="member-record" wx:for="{{item.records}}" wx:for-item="r" wx:key="key">
+            <view class="record-date">{{r.dateShort}}</view>
+            <view class="record-icon" style="background: {{r.color}}">{{r.icon}}</view>
+            <view class="record-label">{{r.categoryName}}<text wx:if="{{r.note}}"> · {{r.note}}</text></view>
+            <view class="record-amount">¥{{r.amountYuan}}</view>
+          </view>
+          <view class="member-empty" wx:if="{{item.records.length === 0}}">暂无付款记录</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 导出长图 -->
+  <view
+    wx:if="{{count > 0}}"
+    class="export-btn {{exporting ? 'export-btn-busy' : ''}}"
+    bindtap="onExportTap"
+  >{{exporting ? '生成中…' : '导出长图'}}</view>
+
+  <!-- 离屏导出画布 -->
+  <canvas type="2d" id="exportCanvas" class="export-canvas"></canvas>
+
+  <!-- 空态 -->
+  <view class="empty" wx:if="{{!loading && count === 0}}">
+    <view class="empty-icon">📊</view>
+    <view>还没有账单数据</view>
+    <view class="empty-hint">去"账单"Tab 记一笔吧</view>
+  </view>
+
+  <view class="bottom-space"></view>
+
+  <!-- 加载态 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+</view>

@@ -1,0 +1,131 @@
+<wxs module="util">
+module.exports = {
+  includes: function(arr, id) {
+    if (!arr) return false
+    return arr.indexOf(id) >= 0
+  }
+}
+</wxs>
+
+<view class="page">
+  <!-- 金额输入 -->
+  <view class="amount-section">
+    <view class="amount-label">金额</view>
+    <view class="amount-input-wrap">
+      <text class="amount-symbol">¥</text>
+      <input
+        class="amount-input"
+        type="digit"
+        placeholder="0.00"
+        placeholder-class="amount-placeholder"
+        value="{{amount}}"
+        bindinput="onAmountInput"
+        focus="{{!isEdit}}"
+      />
+    </view>
+  </view>
+
+  <!-- 分类选择 -->
+  <view class="section">
+    <view class="section-label">分类</view>
+    <view class="category-grid">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="category-item {{category === item.key ? 'active' : ''}}"
+        bindtap="onCategoryTap"
+        data-key="{{item.key}}"
+      >
+        <view
+          class="category-icon"
+          style="background: {{category === item.key ? item.color : '#F5F5F7'}}; color: {{category === item.key ? '#FFFFFF' : '#86868B'}}"
+        >{{item.icon}}</view>
+        <view class="category-name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 日期 -->
+  <view class="section">
+    <picker mode="date" value="{{date}}" bindchange="onDateChange">
+      <view class="form-row">
+        <view class="form-label">发生日期</view>
+        <view class="form-value">{{date}} ›</view>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 付款人 -->
+  <view class="section">
+    <view class="section-label">付款人</view>
+    <view class="member-list">
+      <view
+        wx:for="{{members}}"
+        wx:key="_id"
+        class="member-chip {{payerId === item._id ? 'active' : ''}}"
+        bindtap="onPayerTap"
+        data-id="{{item._id}}"
+      >{{item.name}}</view>
+    </view>
+  </view>
+
+  <!-- 参与人 -->
+  <view class="section">
+    <view class="section-label">
+      <text>参与人（默认全选，点击取消）</text>
+      <text class="select-all" bindtap="onSelectAllParticipants">全选</text>
+    </view>
+    <view class="member-list">
+      <view
+        wx:for="{{members}}"
+        wx:key="_id"
+        class="member-chip {{util.includes(participantIds, item._id) ? 'active' : ''}}"
+        bindtap="onParticipantTap"
+        data-id="{{item._id}}"
+      >
+        <text wx:if="{{util.includes(participantIds, item._id)}}">✓ </text>{{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="section">
+    <view class="section-label">备注</view>
+    <input
+      class="note-input"
+      placeholder="例如：午餐、五人"
+      placeholder-class="note-placeholder"
+      value="{{note}}"
+      bindinput="onNoteInput"
+      maxlength="200"
+    />
+  </view>
+
+  <!-- 图片（可选）：最多 9 张，点缩略图放大 -->
+  <view class="section">
+    <view class="section-label">图片（可选）</view>
+    <view class="image-wrap">
+      <view wx:for="{{imageFileIDs}}" wx:key="*this" class="image-preview">
+        <image src="{{item}}" mode="aspectFill" class="preview-img" bindtap="onPreviewImage" data-idx="{{index}}" />
+        <view class="image-remove" catchtap="onRemoveImage" data-idx="{{index}}">×</view>
+      </view>
+      <view wx:if="{{imageFileIDs.length < 9}}" class="image-add {{uploading ? 'image-add-busy' : ''}}" bindtap="onChooseImage">
+        <text class="image-add-icon">{{uploading ? '…' : '+'}}</text>
+        <text class="image-add-text">{{uploading ? '上传中' : '上传'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+
+  <!-- 操作栏 -->
+  <view class="action-bar">
+    <button
+      class="btn-save"
+      bindtap="onSave"
+      loading="{{saving}}"
+      disabled="{{saving || loading || uploading}}"
+    >{{isEdit ? '保存修改' : '保存'}}</button>
+    <button wx:if="{{isEdit}}" class="btn-delete" bindtap="onDelete">删除</button>
+  </view>
+</view>
