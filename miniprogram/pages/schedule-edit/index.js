@@ -2,6 +2,7 @@
 const { ensureLogin } = require('../../utils/auth')
 const { daysBetween, fenToYuan, parseDate, formatDate, weekday } = require('../../utils/format')
 const { SCHEDULE_TYPES, getCategory } = require('../../utils/constants')
+const app = getApp()
 
 // 待办上限，与云函数 MAX_TODOS 保持一致
 const MAX_TODOS = 30
@@ -99,7 +100,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'listSchedule' }
+        data: { action: 'listSchedule', data: { tripId: app.globalData.currentTrip._id } }
       })
       return (res.result && res.result.list) || []
     } catch (err) {
@@ -112,7 +113,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'listRecords' }
+        data: { action: 'listRecords', data: { tripId: app.globalData.currentTrip._id } }
       })
       this.setData({ allRecords: (res.result && res.result.list) || [] })
     } catch (err) {
@@ -125,7 +126,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'listMembers' }
+        data: { action: 'listMembers', data: { tripId: app.globalData.currentTrip._id } }
       })
       this.setData({ members: (res.result && res.result.list) || [] })
     } catch (err) {
@@ -461,6 +462,7 @@ Page({
         imageFileID: imageFileIDs[0] || '',
         imageFileIDs
       }
+      data.tripId = app.globalData.currentTrip._id
       if (isEdit) data._id = id
 
       const res = await wx.cloud.callFunction({
@@ -499,7 +501,7 @@ Page({
     try {
       await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'deleteSchedule', data: { _id: id } }
+        data: { action: 'deleteSchedule', data: { tripId: app.globalData.currentTrip._id, _id: id } }
       })
       wx.showToast({ title: '已删除', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 600)

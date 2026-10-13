@@ -63,8 +63,10 @@
     <view class="bottom-space"></view>
   </view>
 
-  <!-- 悬浮记账按钮 -->
-  <view class="fab" bindtap="onAddTap">+</view>
+  <!-- 可拖动记账按钮 -->
+  <movable-area class="fab-area">
+    <movable-view class="fab" direction="all" inertia="false" x="{{fabX}}" y="{{fabY}}" bindtap="onAddTap"><view class="fab-plus">+</view></movable-view>
+  </movable-area>
 
   <!-- 加载态 -->
   <view class="loading-mask" wx:if="{{loading}}">

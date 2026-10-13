@@ -20,25 +20,38 @@ Page({
     prepDone: 0,        // 已完成待办数
     prepPercent: 0,
     prepAll: [],        // 展开清单：全部待办（未完成在前，带所属行程项信息）
-    prepOpen: false     // 准备进度卡片是否展开
+    prepOpen: false,    // 准备进度卡片是否展开
+    inviteReady: false,
+    fabX: 0,
+    fabY: 0
   },
 
   async onLoad() {
+    const { windowWidth, windowHeight } = wx.getSystemInfoSync()
+    const rpx = windowWidth / 750
+    this.setData({ fabX: windowWidth - 140 * rpx, fabY: windowHeight - 220 * rpx })
     const data = await ensureLogin()
     if (!data) return
+    this._tripId = data.currentTrip._id
     this.setData({
       trip: data.currentTrip,
       member: data.currentMember
     })
     // 有本地缓存先铺出来，不用盯着 loading 等云端
-    const cached = cache.read('trip')
+    const cached = cache.read(`trip:${this._tripId}:trip`)
     if (cached) this.setData({ ...cached, loading: false })
     // 首次进入需要定位到当日；后续刷新不再抢滚动位置
     await this.loadData({ position: true, silent: !!cached })
+    await this.prepareInvite()
   },
 
   async onShow() {
-    if (app.globalData.currentMember && !this.data.loading) {
+    if (app.globalData.currentMember && app.globalData.currentTrip && this._tripId !== app.globalData.currentTrip._id) {
+      this._tripId = app.globalData.currentTrip._id
+      this.setData({ trip: app.globalData.currentTrip, member: app.globalData.currentMember, days: [], totalItemCount: 0, loading: true })
+      await this.loadData({ position: true })
+      await this.prepareInvite()
+    } else if (app.globalData.currentMember && !this.data.loading) {
       await this.loadData({ silent: true })
     }
   },
@@ -53,9 +66,9 @@ Page({
     if (!opts.silent) this.setData({ loading: true })
     try {
       const [scheduleRes, recordsRes, tripRes] = await Promise.all([
-        wx.cloud.callFunction({ name: 'db', data: { action: 'listSchedule' } }),
-        wx.cloud.callFunction({ name: 'db', data: { action: 'listRecords', data: { limit: 500 } } }),
-        wx.cloud.callFunction({ name: 'db', data: { action: 'getTrip' } })
+        wx.cloud.callFunction({ name: 'db', data: { action: 'listSchedule', data: { tripId: this._tripId } } }),
+        wx.cloud.callFunction({ name: 'db', data: { action: 'listRecords', data: { tripId: this._tripId, limit: 500 } } }),
+        wx.cloud.callFunction({ name: 'db', data: { action: 'getTrip', data: { tripId: this._tripId } } })
       ])
 
       const schedule = (scheduleRes.result && scheduleRes.result.list) || []
@@ -79,7 +92,7 @@ Page({
       }
 
       this.setData({ ...payload, openSwipeId: '', loading: false })
-      cache.write('trip', payload)
+      cache.write(`trip:${this._tripId}:trip`, payload)
 
       if (opts.position) this.positionToCurrentDay(countdown)
     } catch (err) {
@@ -263,7 +276,7 @@ Page({
       }))
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'updateSchedule', data: { _id: sid, todos } }
+        data: { action: 'updateSchedule', data: { tripId: this._tripId, _id: sid, todos } }
       })
       if (res.result && res.result.error) throw new Error(res.result.error)
     } catch (err) {
@@ -370,7 +383,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'deleteSchedule', data: { _id: id } }
+        data: { action: 'deleteSchedule', data: { tripId: this._tripId, _id: id } }
       })
       if (res.result && res.result.error) throw new Error(res.result.error)
       wx.showToast({ title: '已删除', icon: 'success' })
@@ -382,7 +395,37 @@ Page({
   },
 
   onTripSettingTap() {
+    if (!this.data.trip || this.data.trip.role !== 'creator') return
     wx.navigateTo({ url: '/pages/trip-setting/index' })
+  },
+
+  onTripSelectTap() {
+    wx.navigateTo({ url: '/pages/trip-select/index?choose=1' })
+  },
+
+  async prepareInvite() {
+    if (!this.data.trip || this.data.trip.role !== 'creator') return
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'db', data: { action: 'createInvite', data: { tripId: this._tripId } }
+      })
+      if (res.result && res.result.error) throw new Error(res.result.error)
+      this._inviteToken = res.result.token
+      this.setData({ inviteReady: true })
+    } catch (err) {
+      console.error('[trip] 生成邀请失败', err)
+    }
+  },
+
+  onShareAppMessage() {
+    const token = this._inviteToken
+    this._inviteToken = ''
+    this.setData({ inviteReady: false })
+    this.prepareInvite()
+    return {
+      title: `邀请你加入「${this.data.trip.name}」`,
+      path: `/pages/trip-invite/index?token=${token || ''}`
+    }
   },
 
   // 路线海报大图：自建查看页（真机 previewImage 不支持包内路径）

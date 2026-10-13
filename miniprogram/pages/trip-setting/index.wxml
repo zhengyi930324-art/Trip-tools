@@ -2,7 +2,7 @@
   <!-- 旅程名字 -->
   <view class="section">
     <view class="section-label">旅程名字</view>
-    <input
+    <input wx:if="{{isCreator}}"
       class="text-input"
       placeholder="例如：国庆川西行"
       placeholder-class="input-placeholder"
@@ -10,31 +10,67 @@
       bindinput="onNameInput"
       maxlength="30"
     />
+    <view wx:else class="readonly-value">{{name}}</view>
   </view>
 
   <!-- 日期 -->
   <view class="section">
-    <picker mode="date" value="{{startDate}}" bindchange="onStartDateChange">
+    <picker wx:if="{{isCreator}}" mode="date" value="{{startDate}}" bindchange="onStartDateChange">
       <view class="form-row">
         <view class="form-label">出发日期</view>
         <view class="form-value">{{startDate || '选择日期'}} ›</view>
       </view>
     </picker>
+    <view wx:else class="form-row">
+      <view class="form-label">出发日期</view>
+      <view class="form-value">{{startDate}}</view>
+    </view>
     <view class="form-divider"></view>
-    <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
+    <picker wx:if="{{isCreator}}" mode="date" value="{{endDate}}" bindchange="onEndDateChange">
       <view class="form-row">
         <view class="form-label">返回日期</view>
         <view class="form-value">{{endDate || '选择日期'}} ›</view>
       </view>
     </picker>
+    <view wx:else class="form-row">
+      <view class="form-label">返回日期</view>
+      <view class="form-value">{{endDate}}</view>
+    </view>
   </view>
 
-  <view class="tips">修改日期后，行程天数会自动调整</view>
+  <view wx:if="{{isCreator}}" class="tips">修改日期后，行程天数会自动调整</view>
+
+  <view class="section members-section">
+    <view class="members-heading">
+      <view class="section-label">同行成员</view>
+      <view class="member-count" wx:if="{{!membersLoading && !membersLoadFailed}}">{{members.length}} 人</view>
+    </view>
+    <view wx:if="{{membersLoading}}" class="members-message">正在加载成员名单</view>
+    <view wx:elif="{{membersLoadFailed}}" class="members-message" bindtap="loadMembers">加载失败，点此重试</view>
+    <view wx:elif="{{members.length === 0}}" class="members-message">暂无同行成员</view>
+    <view wx:else class="member-list">
+      <view class="member-row" wx:for="{{members}}" wx:key="_id">
+        <image wx:if="{{item.avatarFileID}}" class="member-avatar" src="{{item.avatarFileID}}" mode="aspectFill" />
+        <view wx:else class="member-avatar member-avatar-empty">{{item.avatarText}}</view>
+        <view class="member-info">
+          <view class="member-name">{{item.name}}</view>
+          <view class="member-role">{{item.role === 'creator' ? '创建人' : '同行成员'}}</view>
+        </view>
+        <view
+          wx:if="{{isCreator && item.role !== 'creator'}}"
+          class="remove-member-action"
+          data-id="{{item._id}}"
+          bindtap="onRemoveMember"
+          hover-class="remove-member-action-hover"
+        >{{removingMemberId === item._id ? '处理中' : '移除'}}</view>
+      </view>
+    </view>
+  </view>
 
   <view class="bottom-space"></view>
 
   <!-- 保存按钮 -->
-  <view class="action-bar">
+  <view wx:if="{{isCreator}}" class="action-bar">
     <button
       class="btn-save"
       bindtap="onSave"

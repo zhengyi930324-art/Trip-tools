@@ -64,7 +64,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'listMembers' }
+        data: { action: 'listMembers', data: { tripId: app.globalData.currentTrip._id } }
       })
       const members = (res.result && res.result.list) || []
       this.setData({ members })
@@ -78,7 +78,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'getRecord', data: { _id: id } }
+        data: { action: 'getRecord', data: { tripId: app.globalData.currentTrip._id, _id: id } }
       })
       const record = res.result && res.result.record
       if (!record) {
@@ -291,6 +291,7 @@ Page({
         imageFileID: imageFileIDs[0] || '',
         imageFileIDs
       }
+      data.tripId = app.globalData.currentTrip._id
       if (isEdit) data._id = id
 
       const res = await wx.cloud.callFunction({
@@ -329,7 +330,7 @@ Page({
     try {
       await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'deleteRecord', data: { _id: id } }
+        data: { action: 'deleteRecord', data: { tripId: app.globalData.currentTrip._id, _id: id } }
       })
       wx.showToast({ title: '已删除', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 600)

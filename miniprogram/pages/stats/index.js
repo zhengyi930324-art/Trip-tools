@@ -45,8 +45,10 @@ Page({
   async onLoad() {
     const data = await ensureLogin()
     if (!data) return
+    this._tripId = app.globalData.currentTrip._id
     // 有本地缓存先铺出来（含饼图），不用盯着 loading 等云端
-    const cached = cache.read('stats')
+    const tripId = app.globalData.currentTrip._id
+    const cached = cache.read(`trip:${tripId}:stats`)
     if (cached) {
       this.setData({ ...cached, loading: false })
       wx.nextTick(() => this.drawPie())
@@ -55,7 +57,11 @@ Page({
   },
 
   async onShow() {
-    if (app.globalData.currentMember && !this.data.loading) {
+    if (app.globalData.currentMember && app.globalData.currentTrip && this._tripId !== app.globalData.currentTrip._id) {
+      this._tripId = app.globalData.currentTrip._id
+      this.setData({ stats: null, categoryList: [], balances: [], totalYuan: '0.00', avgYuan: '0.00', count: 0, memberCount: 0, loading: true })
+      await this.loadData()
+    } else if (app.globalData.currentMember && !this.data.loading) {
       await this.loadData({ silent: true })
     }
   },
@@ -76,8 +82,8 @@ Page({
     if (!opts.silent) this.setData({ loading: true })
     try {
       const [statsRes, recordsRes] = await Promise.all([
-        wx.cloud.callFunction({ name: 'getStats' }),
-        wx.cloud.callFunction({ name: 'db', data: { action: 'listRecords', data: { limit: 500 } } })
+        wx.cloud.callFunction({ name: 'getStats', data: { tripId: app.globalData.currentTrip._id } }),
+        wx.cloud.callFunction({ name: 'db', data: { action: 'listRecords', data: { tripId: app.globalData.currentTrip._id, limit: 500 } } })
       ])
 
       const stats = statsRes.result
@@ -168,7 +174,7 @@ Page({
         memberCount: stats.memberCount || 0
       }
       this.setData({ ...payload, loading: false })
-      cache.write('stats', payload)
+      cache.write(`trip:${app.globalData.currentTrip._id}:stats`, payload)
 
       // 渲染完成后再画饼图（canvas 处于 wx:if 块内）
       wx.nextTick(() => this.drawPie())

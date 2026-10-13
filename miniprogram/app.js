@@ -11,18 +11,20 @@ App({
     })
 
     // 启动登录流程，保存 promise 供页面 await
-    this.globalData.loginReady = this.doLogin()
-
-    // 后台把各云函数叫一遍暖实例，切 Tab 的首次调用不被冷启动卡住
-    this.prewarm()
+    this.globalData.loginReady = this.doLogin().then(result => {
+      this.prewarm(result.trips || [])
+      return result
+    })
   },
 
-  // 每个云函数调用一次预热（只读 action，错误忽略）
-  prewarm() {
+  // 已加入旅程时才预热行程相关云函数。
+  prewarm(trips) {
+    const tripId = trips[0] && trips[0]._id
+    if (!tripId) return
     ;[
-      { name: 'db', data: { action: 'getTrip' } },
-      { name: 'getStats' },
-      { name: 'settle' }
+      { name: 'db', data: { action: 'getTrip', data: { tripId } } },
+      { name: 'getStats', data: { tripId } },
+      { name: 'settle', data: { tripId } }
     ].forEach(item => {
       wx.cloud.callFunction(item).catch(() => {})
     })
@@ -32,16 +34,20 @@ App({
     openId: null,
     currentMember: null,
     currentTrip: null,
+    currentTrips: [],
+    pendingInviteToken: '',
     loginReady: null
   },
 
   async doLogin() {
     try {
       const res = await wx.cloud.callFunction({ name: 'login' })
-      const { openId, member, trip } = res.result
+      const { openId, member, trips } = res.result
       this.globalData.openId = openId
       this.globalData.currentMember = member
-      this.globalData.currentTrip = trip
+      this.globalData.currentTrips = trips || []
+      this.globalData.currentTrip = null
+      this.globalData.pendingInviteToken = wx.getStorageSync('pendingInviteToken') || ''
       return res.result
     } catch (err) {
       console.error('[app] login 失败', err)
@@ -56,10 +62,11 @@ App({
         name: 'login',
         data: { name, avatarFileID: avatarFileID || '' }
       })
-      const { openId, member, trip } = res.result
+      const { openId, member, trips } = res.result
       this.globalData.openId = openId
       this.globalData.currentMember = member
-      this.globalData.currentTrip = trip
+      this.globalData.currentTrips = trips || []
+      this.globalData.currentTrip = null
       return res.result
     } catch (err) {
       console.error('[app] register 失败', err)

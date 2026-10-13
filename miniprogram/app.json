@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/trip-select/index",
     "pages/trip/index",
     "pages/trip-map/index",
     "pages/route-map/index",
@@ -9,6 +10,7 @@
     "pages/record-edit/index",
     "pages/schedule-edit/index",
     "pages/trip-setting/index",
+    "pages/trip-invite/index",
     "pages/login/index"
   ],
   "window": {

@@ -28,6 +28,8 @@ function makeDb() {
               if (v.__op === 'range') return r[k] >= v.gte && r[k] <= v.lte
               if (v.__op === 'gte') return r[k] >= v.val
               if (v.__op === 'lte') return r[k] <= v.val
+              if (v.__op === 'in') return v.val.includes(r[k])
+              if (v.__op === 'exists') return v.val ? r[k] !== undefined : r[k] === undefined
               return true
             }
             return r[k] === v
@@ -44,10 +46,22 @@ function makeDb() {
       },
       doc(id) {
         return {
-          async get() { return { data: (cols()[name] || []).find(r => r._id === id) } },
+          async get() {
+            const data = (cols()[name] || []).find(r => r._id === id)
+            if (!data) throw new Error(`document with _id ${id} does not exist`)
+            return { data }
+          },
           async update({ data }) {
             const row = (cols()[name] || []).find(r => r._id === id)
             Object.assign(row, data); return { stats: { updated: 1 } }
+          },
+          async set({ data }) {
+            if (!cols()[name]) cols()[name] = []
+            const rows = cols()[name]
+            const row = rows.find(r => r._id === id)
+            if (row) Object.assign(row, data)
+            else rows.push({ _id: id, ...data })
+            return { _id: id }
           },
           async remove() {
             const arr = cols()[name] || []
@@ -56,6 +70,25 @@ function makeDb() {
             return { stats: { removed: 1 } }
           }
         }
+      },
+      async update({ data }) {
+        const rows = (cols()[name] || []).filter(r => !q._where || Object.keys(q._where).every(k => {
+          const value = q._where[k]
+          if (value && value.__op === 'exists') return value.val ? r[k] !== undefined : r[k] === undefined
+          return r[k] === value
+        }))
+        rows.forEach(row => Object.assign(row, data))
+        return { stats: { updated: rows.length }, updated: rows.length }
+      },
+      async remove() {
+        const rows = cols()[name] || []
+        const matches = rows.filter(r => !q._where || Object.keys(q._where).every(k => r[k] === q._where[k]))
+        cols()[name] = rows.filter(r => !matches.includes(r))
+        return { stats: { removed: matches.length }, deleted: matches.length }
+      },
+      async count() {
+        const rows = (cols()[name] || []).filter(r => !q._where || Object.keys(q._where).every(k => r[k] === q._where[k]))
+        return { total: rows.length }
       },
       async add({ data }) {
         const _id = 'id_' + Math.random().toString(36).slice(2, 9)
@@ -68,7 +101,9 @@ function makeDb() {
   }
   const cmp = () => ({
     gte: (v) => ({ __op: 'gte', val: v, and: (b) => ({ __op: 'range', gte: v, lte: b.val }) }),
-    lte: (v) => ({ __op: 'lte', val: v })
+    lte: (v) => ({ __op: 'lte', val: v }),
+    in: (v) => ({ __op: 'in', val: v }),
+    exists: (v) => ({ __op: 'exists', val: v })
   })
   return {
     collection: mk,
@@ -94,10 +129,13 @@ Module._load = function (request) {
   return origLoad.apply(this, arguments)
 }
 
-const settleFn = require(path.join(__dirname, 'cloudfunctions/settle/index.js')).main
-const statsFn = require(path.join(__dirname, 'cloudfunctions/getStats/index.js')).main
+const settleMain = require(path.join(__dirname, 'cloudfunctions/settle/index.js')).main
+const statsMain = require(path.join(__dirname, 'cloudfunctions/getStats/index.js')).main
 const loginFn = require(path.join(__dirname, 'cloudfunctions/login/index.js')).main
-const dbFn = require(path.join(__dirname, 'cloudfunctions/db/index.js')).main
+const dbMain = require(path.join(__dirname, 'cloudfunctions/db/index.js')).main
+const dbFn = event => dbMain({ ...event, data: { tripId: 't1', ...(event.data || {}) } })
+const settleFn = event => settleMain({ ...event, tripId: 't1' })
+const statsFn = event => statsMain({ ...event, tripId: 't1' })
 
 // ---------- 断言工具 ----------
 let pass = 0, fail = 0
@@ -112,7 +150,8 @@ function seed(members, records) {
   CURRENT = {
     collections: {
       members: members.map((m, i) => ({ _id: 'm' + i, openId: 'o' + i, name: m, avatarFileID: '', createdAt: new Date(2026, 0, i + 1) })),
-      records, schedule: [], trips: [{ _id: 't1', name: '国庆川西行', startDate: '2026-10-01', endDate: '2026-10-07', createdAt: new Date(), updatedAt: new Date() }]
+      tripMembers: members.map((_, i) => ({ _id: `tm${i}`, tripId: 't1', memberId: `m${i}`, role: i === 0 ? 'creator' : 'member' })),
+      records: records.map(record => ({ tripId: 't1', ...record })), schedule: [], trips: [{ _id: 't1', name: '国庆川西行', startDate: '2026-10-01', endDate: '2026-10-07', createdByMemberId: 'm0', createdAt: new Date(), updatedAt: new Date() }]
     },
     openId: 'o0'
   }
@@ -294,30 +333,50 @@ function rec(payerIdx, participantIdxs, amount, category, date) {
   // 7.13 未知 action
   d = await dbFn({ action: 'dropDatabase', data: {} })
   eq(d.code, 'UNKNOWN_ACTION', '用例7 拒绝未知 action')
+  CURRENT.openId = 'o1'
+  d = await dbFn({ action: 'updateTrip', data: { name: '成员不应修改' } })
+  eq(d.code, 'CREATOR_REQUIRED', '用例7 普通成员不能修改旅程设置')
+  d = await dbFn({ action: 'createInvite', data: { tripId: 't1' } })
+  eq(d.code, 'CREATOR_REQUIRED', '用例7 普通成员不能创建邀请')
+  CURRENT.openId = 'o0'
+  d = await dbMain({ action: 'listRecords', data: { tripId: 'other-trip' } })
+  eq(d.code, 'NOT_TRIP_MEMBER', '用例7 非成员不能读取其他旅程')
 
   // ===== 用例 8：login 云函数 —— 查询 / 注册 / 幂等 =====
   CURRENT.collections = { members: [], records: [], schedule: [], trips: [] }
   CURRENT.openId = 'o_new'
   let l = await loginFn({})
   eq(l.member, null, '用例8 新用户 member=null（前端应跳起名页）')
-  eq(l.trip, null, '用例8 新用户 trip=null')
+  eq(l.trips.length, 0, '用例8 新用户没有已加入旅程')
   eq(l.openId, 'o_new', '用例8 返回 openId')
   l = await loginFn({ name: '小明' })
   eq(l.member.name, '小明', '用例8 注册成功返回 member')
   eq(l.member.openId, 'o_new', '用例8 member 绑定 openId')
-  assert(l.trip && l.trip.name, '用例8 自动创建默认旅程')
-  eq(l.trip.startDate, '2026-10-01', '用例8 默认出发日')
-  const firstTripId = l.trip._id
+  eq(l.trips.length, 0, '用例8 注册不会自动创建默认旅程')
+  const createdTrip = await dbFn({ action: 'createTrip', data: { name: '周末旅行', startDate: '2026-10-01', endDate: '2026-10-02' } })
+  const firstTripId = createdTrip.trip._id
   // 再登录（已注册，不带 name）
   l = await loginFn({})
   assert(l.member, '用例8 二次登录自动返回 member')
   eq(l.member.name, '小明', '用例8 二次登录返回同一 member')
-  eq(l.trip._id, firstTripId, '用例8 不会重复创建旅程')
-  // 第二个人注册 → 加入同一旅程
+  eq(l.trips[0]._id, firstTripId, '用例8 登录返回已加入旅程')
+  // 第二个人注册 → 尚未加入创建人的旅程
   CURRENT.openId = 'o_friend'
   l = await loginFn({ name: '小红' })
-  eq(l.trip._id, firstTripId, '用例8 朋友加入同一旅程')
-  eq(CURRENT.collections.members.length, 2, '用例8 成员数=2')
+  eq(l.trips.length, 0, '用例8 新成员不会自动加入其他旅程')
+  CURRENT.openId = 'o_new'
+  const invite = await dbFn({ action: 'createInvite', data: { tripId: firstTripId } })
+  CURRENT.openId = 'o_friend'
+  const joined = await dbFn({ action: 'joinTrip', data: { token: invite.token } })
+  eq(joined.success, true, '用例8 邀请加入旅程')
+  const secondJoin = await dbFn({ action: 'joinTrip', data: { token: invite.token } })
+  eq(secondJoin.alreadyMember, true, '用例8 已是成员重复进入保持成功')
+  CURRENT.openId = 'o_new2'
+  await loginFn({ name: '小周' })
+  const usedInvite = await dbFn({ action: 'joinTrip', data: { token: invite.token } })
+  eq(usedInvite.code, 'INVITE_USED', '用例8 邀请只允许一位新成员使用')
+  CURRENT.openId = 'o_new'
+  eq(CURRENT.collections.members.length, 3, '用例8 注册成员数=3')
   eq(CURRENT.collections.trips.length, 1, '用例8 旅程数仍为 1')
   // 空白名字注册 → 不应创建 member
   const before = CURRENT.collections.members.length
@@ -329,6 +388,28 @@ function rec(payerIdx, participantIdxs, amount, category, date) {
   CURRENT.openId = 'o_long'
   l = await loginFn({ name: '一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十' })
   eq(l.member.name.length, 20, '用例8 名字截断到 20 字')
+
+  // ===== 用例 8b：旧旅程数据迁移可重复执行且保留已有数据 =====
+  CURRENT = {
+    collections: {
+      members: [{ _id: 'old-member', openId: 'o_old', name: '旧成员', createdAt: new Date() }],
+      trips: [{ _id: 'legacy', name: '贵州广西游', startDate: '2026-10-01', endDate: '2026-10-07' }],
+      records: [{ _id: 'old-record', amount: 1200, note: '已存在账目' }],
+      schedule: [{ _id: 'old-schedule', title: '已存在行程' }]
+    },
+    openId: 'o_migrator'
+  }
+  l = await loginFn({ name: '旅程创建人' })
+  const migratedTripId = l.trips[0]._id
+  eq(migratedTripId, 'legacy', '用例8b 沿用现有旅程 ID')
+  eq(CURRENT.collections.records[0].tripId, 'legacy', '用例8b 旧账目关联到现有旅程')
+  eq(CURRENT.collections.records[0].note, '已存在账目', '用例8b 旧账目内容保留')
+  eq(CURRENT.collections.schedule[0].tripId, 'legacy', '用例8b 旧行程项关联到现有旅程')
+  eq(CURRENT.collections.tripMembers.length, 2, '用例8b 创建人和旧成员都保留为旅程成员')
+  eq(CURRENT.collections.tripMembers.find(m => m.memberId === 'old-member').role, 'member', '用例8b 旧成员保留普通成员身份')
+  await loginFn({})
+  eq(CURRENT.collections.tripMembers.length, 2, '用例8b 重复登录不产生重复成员关系')
+  eq(CURRENT.collections.records.length, 1, '用例8b 重复迁移不复制旧账目')
 
   // ===== 用例 9：随机化不变量 —— AA 算法在任意场景下均平衡 =====
   let rndChecked = 0
@@ -460,16 +541,14 @@ function rec(payerIdx, participantIdxs, amount, category, date) {
   assert(dbSrc2.includes(`['${feCats}']`), `用例11 constants.CATEGORIES 与 db 云函数白名单不一致: ${feCats}`)
   const feTypes = cst.SCHEDULE_TYPES.map(t => t.key).join("', '")
   assert(dbSrc2.includes(`['${feTypes}']`), `用例11 constants.SCHEDULE_TYPES 与 db 云函数白名单不一致: ${feTypes}`)
-  eq(cst.CATEGORIES.length, 7, '用例11 账目分类 7 个（方案要求）')
+  eq(cst.CATEGORIES.length, 5, '用例11 账目分类 5 个（当前产品分类）')
   // 11.9 getCategory / getScheduleType 容错
   eq(cst.getCategory('food').name, '餐饮', '用例11 getCategory 命中')
   eq(cst.getCategory('nope').key, 'other', '用例11 getCategory 未知 key 降级为 other')
   eq(cst.getScheduleType('scenic').name, '景点', '用例11 getScheduleType 命中')
   eq(cst.getScheduleType('nope').key, 'other', '用例11 getScheduleType 未知 key 降级')
   // 11.10 默认旅程与方案一致
-  eq(cst.DEFAULT_TRIP.name, '国庆川西行', '用例11 默认旅程名')
-  eq(cst.DEFAULT_TRIP.startDate, '2026-10-01', '用例11 默认出发日')
-  eq(cst.DEFAULT_TRIP.endDate, '2026-10-07', '用例11 默认返回日')
+  eq(cst.DEFAULT_TRIP, undefined, '用例11 不再提供写死的默认旅程')
   ok.push('用例11 utils/format + utils/constants 全部通过')
 
   // ===== 用例 12：record-edit 的 day 推算逻辑（行程页每日花费依赖它） =====

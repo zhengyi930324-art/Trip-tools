@@ -13,9 +13,14 @@
 
   <!-- 菜单 -->
   <view class="menu-card">
-    <view class="menu-item" bindtap="onTripSettingTap">
+    <view class="menu-item" wx:if="{{trip}}" bindtap="onTripSettingTap">
       <view class="menu-icon">⚙️</view>
       <view class="menu-label">旅程设置</view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="onTripSelectTap">
+      <view class="menu-icon">↔️</view>
+      <view class="menu-label">切换旅程</view>
       <view class="menu-arrow">›</view>
     </view>
   </view>

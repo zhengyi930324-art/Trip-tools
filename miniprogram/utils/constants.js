@@ -18,13 +18,6 @@ const SCHEDULE_TYPES = [
   { key: 'other',   name: '其他', color: '#95A5A6', icon: '其' }
 ]
 
-// 默认旅程
-const DEFAULT_TRIP = {
-  name: '国庆川西行',
-  startDate: '2026-10-01',
-  endDate: '2026-10-07'
-}
-
 // 根据 key 查分类
 function getCategory(key) {
   return CATEGORIES.find(c => c.key === key) || CATEGORIES[CATEGORIES.length - 1]
@@ -37,7 +30,6 @@ function getScheduleType(key) {
 module.exports = {
   CATEGORIES,
   SCHEDULE_TYPES,
-  DEFAULT_TRIP,
   getCategory,
   getScheduleType
 }

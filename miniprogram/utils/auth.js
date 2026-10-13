@@ -9,7 +9,7 @@
  *   if (!data) return
  *   // 正常加载页面
  */
-async function ensureLogin() {
+async function ensureLogin(options = {}) {
   const app = getApp()
   if (app.globalData.loginReady) {
     try {
@@ -26,6 +26,15 @@ async function ensureLogin() {
     const route = current && current.route
     if (route !== 'pages/login/index') {
       wx.reLaunch({ url: '/pages/login/index' })
+    }
+    return null
+  }
+
+  if (!options.allowNoTrip && !app.globalData.currentTrip) {
+    const pages = getCurrentPages()
+    const current = pages[pages.length - 1]
+    if (!current || current.route !== 'pages/trip-select/index') {
+      wx.reLaunch({ url: '/pages/trip-select/index' })
     }
     return null
   }

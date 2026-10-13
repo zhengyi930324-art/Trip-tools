@@ -15,7 +15,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
-exports.main = async (event, context) => {
+exports.main = async (event = {}) => {
   const wxContext = cloud.getWXContext()
   const openId = wxContext.OPENID
 
@@ -25,14 +25,23 @@ exports.main = async (event, context) => {
     return { error: '未注册', code: 'NOT_REGISTERED' }
   }
 
+  const tripId = event.tripId
+  if (!tripId) return { error: '缺少 tripId', code: 'INVALID_TRIP' }
+  const access = await db.collection('tripMembers').where({ tripId, memberId: memberRes.data[0]._id }).limit(1).get()
+  if (!access.data[0]) return { error: '无权访问该行程', code: 'NOT_TRIP_MEMBER' }
+
   try {
     const [recordsRes, membersRes] = await Promise.all([
-      db.collection('records').limit(1000).get(),
-      db.collection('members').limit(100).get()
+      db.collection('records').where({ tripId }).limit(1000).get(),
+      db.collection('tripMembers').where({ tripId }).limit(100).get()
     ])
 
     const records = recordsRes.data
-    const members = membersRes.data
+    const members = []
+    for (const relation of membersRes.data) {
+      const result = await db.collection('members').where({ _id: relation.memberId }).limit(1).get()
+      if (result.data[0]) members.push(result.data[0])
+    }
 
     // 计算每人 balance
     const balanceMap = {}

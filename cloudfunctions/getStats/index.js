@@ -1,93 +1,61 @@
-// cloudfunctions/getStats/index.js
-// 统计聚合：总花销、分类占比、每人已付/应付/差额
-//
-// 入参：无
-// 出参：{
-//   total, count, memberCount,
-//   byCategory: { traffic: 1234, ... },
-//   balances: [{ memberId, name, paid, owed, balance }]
-// }
-
+// 按行程统计总花销、分类占比、每人已付/应付/差额。
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
-exports.main = async (event, context) => {
-  const wxContext = cloud.getWXContext()
-  const openId = wxContext.OPENID
-
-  // 鉴权
+exports.main = async (event = {}) => {
+  const openId = cloud.getWXContext().OPENID
   const memberRes = await db.collection('members').where({ openId }).limit(1).get()
-  if (!memberRes.data[0]) {
-    return { error: '未注册', code: 'NOT_REGISTERED' }
-  }
+  const currentMember = memberRes.data[0]
+  if (!currentMember) return { error: '未注册', code: 'NOT_REGISTERED' }
+  const { tripId } = event
+  if (!tripId) return { error: '缺少 tripId', code: 'INVALID_TRIP' }
+  const access = await db.collection('tripMembers').where({ tripId, memberId: currentMember._id }).limit(1).get()
+  if (!access.data[0]) return { error: '无权访问该行程', code: 'NOT_TRIP_MEMBER' }
 
   try {
-    // 拉取所有 records 和 members
-    const [recordsRes, membersRes] = await Promise.all([
-      db.collection('records').limit(1000).get(),
-      db.collection('members').orderBy('createdAt', 'asc').limit(100).get()
+    const [recordsRes, relationsRes] = await Promise.all([
+      db.collection('records').where({ tripId }).limit(1000).get(),
+      db.collection('tripMembers').where({ tripId }).limit(100).get()
     ])
-
+    const members = []
+    for (const relation of relationsRes.data) {
+      const result = await db.collection('members').where({ _id: relation.memberId }).limit(1).get()
+      if (result.data[0]) members.push(result.data[0])
+    }
     const records = recordsRes.data
-    const members = membersRes.data
-
-    // 总花销
-    const total = records.reduce((sum, r) => sum + (r.amount || 0), 0)
-
-    // 按分类汇总
+    const total = records.reduce((sum, record) => sum + (record.amount || 0), 0)
     const byCategory = {}
-    records.forEach(r => {
-      if (!r.category) return
-      byCategory[r.category] = (byCategory[r.category] || 0) + (r.amount || 0)
+    records.forEach(record => {
+      if (record.category) byCategory[record.category] = (byCategory[record.category] || 0) + (record.amount || 0)
     })
 
-    // 每人已付（按付款人）
     const byPayer = {}
-    members.forEach(m => { byPayer[m._id] = 0 })
-    records.forEach(r => {
-      if (byPayer[r.payerId] !== undefined) {
-        byPayer[r.payerId] += r.amount || 0
-      }
-    })
-
-    // 每人应付（按参与人分摊，余数分给前几个人）
     const byParticipant = {}
-    members.forEach(m => { byParticipant[m._id] = 0 })
-    records.forEach(r => {
-      const participants = r.participantIds || []
-      if (participants.length === 0) return
-      const amount = r.amount || 0
-      const share = Math.floor(amount / participants.length)
-      const remainder = amount - share * participants.length
-      participants.forEach((pid, idx) => {
-        if (byParticipant[pid] !== undefined) {
-          byParticipant[pid] += share + (idx < remainder ? 1 : 0)
-        }
+    members.forEach(member => { byPayer[member._id] = 0; byParticipant[member._id] = 0 })
+    records.forEach(record => {
+      if (byPayer[record.payerId] !== undefined) byPayer[record.payerId] += record.amount || 0
+      const participants = record.participantIds || []
+      if (!participants.length) return
+      const share = Math.floor((record.amount || 0) / participants.length)
+      const remainder = (record.amount || 0) - share * participants.length
+      participants.forEach((id, index) => {
+        if (byParticipant[id] !== undefined) byParticipant[id] += share + (index < remainder ? 1 : 0)
       })
     })
-
-    // 每人差额
-    const balances = members.map(m => {
-      const paid = byPayer[m._id] || 0
-      const owed = byParticipant[m._id] || 0
+    const balances = members.map(member => {
+      const paid = byPayer[member._id] || 0
+      const owed = byParticipant[member._id] || 0
       return {
-        memberId: m._id,
-        name: m.name,
-        avatarFileID: m.avatarFileID || '',
+        memberId: member._id,
+        name: member.name,
+        avatarFileID: member.avatarFileID || '',
         paid,
         owed,
         balance: paid - owed
       }
     })
-
-    return {
-      total,
-      count: records.length,
-      memberCount: members.length,
-      byCategory,
-      balances
-    }
+    return { total, count: records.length, memberCount: members.length, byCategory, balances }
   } catch (e) {
     console.error('[getStats] 失败', e)
     return { error: e.message || '统计失败', code: 'INTERNAL_ERROR' }

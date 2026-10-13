@@ -18,6 +18,13 @@
   margin-bottom: 20rpx;
 }
 
+.readonly-value {
+  min-height: 80rpx;
+  line-height: 80rpx;
+  font-size: 28rpx;
+  color: #1D1D1F;
+}
+
 .text-input {
   width: 100%;
   height: 80rpx;
@@ -64,6 +71,96 @@
 
 .bottom-space {
   height: 40rpx;
+}
+
+.members-section {
+  padding-bottom: 8rpx;
+}
+
+.members-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.members-heading .section-label {
+  margin-bottom: 16rpx;
+}
+
+.member-count,
+.member-role,
+.members-message {
+  color: #86868B;
+  font-size: 24rpx;
+}
+
+.member-count {
+  margin-bottom: 16rpx;
+}
+
+.members-message {
+  padding: 16rpx 0 24rpx;
+}
+
+.member-row {
+  min-height: 92rpx;
+  display: flex;
+  align-items: center;
+  border-top: 1rpx solid #F5F5F7;
+  padding: 16rpx 0;
+}
+
+.member-avatar {
+  flex: 0 0 72rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.member-avatar-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF0E9;
+  color: #FF6B35;
+  font-size: 28rpx;
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+  padding-left: 20rpx;
+}
+
+.member-name {
+  color: #1D1D1F;
+  font-size: 28rpx;
+  line-height: 1.4;
+}
+
+.member-role {
+  margin-top: 4rpx;
+}
+
+.remove-member-action {
+  flex: 0 0 88rpx;
+  width: 88rpx;
+  height: 64rpx;
+  margin-left: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: #86868B;
+  font-size: 24rpx;
+}
+
+.remove-member-action-hover {
+  color: #FF6B35;
+}
+
+.remove-member-action:active {
+  opacity: 0.65;
 }
 
 .action-bar {

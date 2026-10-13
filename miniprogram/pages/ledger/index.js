@@ -17,21 +17,32 @@ Page({
     loading: true,
     totalCost: 0,
     totalCostYuan: '0.00',
-    recordCount: 0
+    recordCount: 0,
+    fabX: 0,
+    fabY: 0
   },
 
   async onLoad() {
+    const { windowWidth, windowHeight } = wx.getSystemInfoSync()
+    const rpx = windowWidth / 750
+    this.setData({ fabX: windowWidth - 140 * rpx, fabY: windowHeight - 220 * rpx })
     const data = await ensureLogin()
     if (!data) return
+    this._tripId = app.globalData.currentTrip._id
     // 有本地缓存先铺出来（仅当筛选条件一致），不用盯着 loading 等云端
-    const cached = cache.read('ledger')
+    const tripId = app.globalData.currentTrip._id
+    const cached = cache.read(`trip:${tripId}:ledger`)
     const hit = !!cached && cached.activeCategory === this.data.activeCategory
     if (hit) this.setData({ ...cached, loading: false })
     await this.loadData({ silent: hit })
   },
 
   async onShow() {
-    if (app.globalData.currentMember && !this.data.loading) {
+    if (app.globalData.currentMember && app.globalData.currentTrip && this._tripId !== app.globalData.currentTrip._id) {
+      this._tripId = app.globalData.currentTrip._id
+      this.setData({ groupedRecords: [], members: [], memberMap: {}, totalCost: 0, totalCostYuan: '0.00', recordCount: 0, loading: true })
+      await this.loadData()
+    } else if (app.globalData.currentMember && !this.data.loading) {
       await this.loadData({ silent: true })
     }
   },
@@ -48,9 +59,9 @@ Page({
       const [recordsRes, membersRes] = await Promise.all([
         wx.cloud.callFunction({
           name: 'db',
-          data: { action: 'listRecords', data: { category: this.data.activeCategory, limit: 500 } }
+          data: { action: 'listRecords', data: { tripId: app.globalData.currentTrip._id, category: this.data.activeCategory, limit: 500 } }
         }),
-        wx.cloud.callFunction({ name: 'db', data: { action: 'listMembers' } })
+        wx.cloud.callFunction({ name: 'db', data: { action: 'listMembers', data: { tripId: app.globalData.currentTrip._id } } })
       ])
 
       const records = (recordsRes.result && recordsRes.result.list) || []
@@ -91,7 +102,7 @@ Page({
         activeCategory: active
       }
       this.setData({ ...payload, loading: false })
-      cache.write('ledger', payload)
+      cache.write(`trip:${app.globalData.currentTrip._id}:ledger`, payload)
     } catch (err) {
       console.error('[ledger] 加载失败', err)
       wx.showToast({ title: '加载失败', icon: 'none' })
@@ -107,7 +118,7 @@ Page({
     })
 
     return Object.keys(map)
-      .sort((a, b) => b.localeCompare(a))
+      .sort((a, b) => a.localeCompare(b))
       .map(date => {
         const items = map[date]
         const dayTotal = items.reduce((sum, r) => sum + (r.amount || 0), 0)

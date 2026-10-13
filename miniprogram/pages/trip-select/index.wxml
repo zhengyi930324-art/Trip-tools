@@ -1,0 +1,32 @@
+<view class="page">
+  <view class="heading-row">
+    <view class="heading">选择一个旅程</view>
+    <view class="create-btn-top" wx:if="{{!creating}}" bindtap="onCreateTap">＋ 新建旅程</view>
+  </view>
+  <view class="subheading">进入后与同行的人共同记录行程和开销</view>
+
+  <view class="trip-list" wx:if="{{trips.length}}">
+    <button class="trip-card" style="width:100%;margin:0 0 20rpx" wx:for="{{trips}}" wx:key="_id" data-id="{{item._id}}" bindtap="onTripTap" hover-class="trip-card-hover">
+      <view class="trip-name">{{item.name}}</view>
+      <view class="trip-date">{{item.startDate}} 至 {{item.endDate}}</view>
+      <view class="trip-role">{{item.role === 'creator' ? '创建人' : '成员'}}　›</view>
+    </button>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && trips.length === 0}}">还没有加入旅程，创建一个或通过朋友的邀请加入</view>
+
+  <view class="create-panel" wx:if="{{creating}}">
+    <view class="panel-title">新建旅程</view>
+    <input class="field" placeholder="旅程名称" maxlength="30" value="{{name}}" bindinput="onNameInput" />
+    <picker mode="date" value="{{startDate}}" bindchange="onStartDateChange">
+      <view class="field picker-field">{{startDate || '选择出发日期'}}</view>
+    </picker>
+    <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
+      <view class="field picker-field">{{endDate || '选择结束日期'}}</view>
+    </picker>
+    <view class="form-actions">
+      <button class="cancel-btn" bindtap="onCancelCreate">取消</button>
+      <button class="submit-btn" bindtap="onCreateSubmit" loading="{{loading}}">创建并进入</button>
+    </view>
+  </view>
+</view>

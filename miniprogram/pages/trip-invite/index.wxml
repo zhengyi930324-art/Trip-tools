@@ -1,0 +1,12 @@
+<view class="page">
+  <view class="invite-card" wx:if="{{trip}}">
+    <view class="eyebrow">朋友邀请你加入旅程</view>
+    <view class="trip-name">{{trip.name}}</view>
+    <view class="trip-date">{{trip.startDate}} 至 {{trip.endDate}}</view>
+    <view class="member-count">已有 {{memberCount}} 位同行成员</view>
+    <view class="already-member" wx:if="{{alreadyMember}}">你已是旅程成员</view>
+    <button class="join-btn" bindtap="onJoinTap" loading="{{joining}}">{{alreadyMember ? '进入旅程' : '确认加入'}}</button>
+  </view>
+  <view class="invalid" wx:if="{{!loading && !trip}}">这个邀请链接不可用或已被使用</view>
+  <button class="back-btn" wx:if="{{!loading && !trip}}" bindtap="onBackTap">返回我的旅程</button>
+</view>

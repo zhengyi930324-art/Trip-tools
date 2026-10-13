@@ -24,6 +24,8 @@ function makeDb() {
               if (v.__op === 'range') return r[k] >= v.gte && r[k] <= v.lte
               if (v.__op === 'gte') return r[k] >= v.val
               if (v.__op === 'lte') return r[k] <= v.val
+              if (v.__op === 'in') return v.val.includes(r[k])
+              if (v.__op === 'exists') return v.val ? r[k] !== undefined : r[k] === undefined
               return true
             }
             return r[k] === v
@@ -36,10 +38,41 @@ function makeDb() {
       },
       doc(id) {
         return {
-          async get() { return { data: (cols()[name] || []).find(r => r._id === id) } },
+          async get() {
+            const data = (cols()[name] || []).find(r => r._id === id)
+            if (!data) throw new Error(`document with _id ${id} does not exist`)
+            return { data }
+          },
           async update({ data }) { Object.assign((cols()[name] || []).find(r => r._id === id), data); return { stats: { updated: 1 } } },
-          async remove() { const a = cols()[name] || []; const i = a.findIndex(r => r._id === id); if (i >= 0) a.splice(i, 1); return { stats: { removed: 1 } } }
+          async set({ data }) {
+            if (!cols()[name]) cols()[name] = []
+            const rows = cols()[name]
+            const current = rows.find(r => r._id === id)
+            if (current) Object.assign(current, data)
+            else rows.push({ _id: id, ...data })
+            return { _id: id }
+          },
+          async remove() { const a = cols()[name] || []; const i = a.findIndex(r => r._id === id); if (i >= 0) a.splice(i, 1); return { stats: { removed: i >= 0 ? 1 : 0 } } }
         }
+      },
+      async update({ data }) {
+        const rows = (cols()[name] || []).filter(r => !q._where || Object.keys(q._where).every(k => {
+          const value = q._where[k]
+          if (value && value.__op === 'exists') return value.val ? r[k] !== undefined : r[k] === undefined
+          return r[k] === value
+        }))
+        rows.forEach(row => Object.assign(row, data))
+        return { stats: { updated: rows.length }, updated: rows.length }
+      },
+      async remove() {
+        const rows = cols()[name] || []
+        const matches = rows.filter(r => !q._where || Object.keys(q._where).every(k => r[k] === q._where[k]))
+        cols()[name] = rows.filter(r => !matches.includes(r))
+        return { stats: { removed: matches.length }, deleted: matches.length }
+      },
+      async count() {
+        const rows = (cols()[name] || []).filter(r => !q._where || Object.keys(q._where).every(k => r[k] === q._where[k]))
+        return { total: rows.length }
       },
       async add({ data }) {
         const _id = 'id_' + Math.random().toString(36).slice(2, 9)
@@ -54,7 +87,9 @@ function makeDb() {
     collection: mk,
     command: {
       gte: (v) => ({ __op: 'gte', val: v, and: (b) => ({ __op: 'range', gte: v, lte: b.val }) }),
-      lte: (v) => ({ __op: 'lte', val: v })
+      lte: (v) => ({ __op: 'lte', val: v }),
+      in: (v) => ({ __op: 'in', val: v }),
+      exists: (v) => ({ __op: 'exists', val: v })
     },
     serverDate: () => new Date(),
     async createCollection(name) {
@@ -76,9 +111,10 @@ Module._load = function (request) {
   return origLoad.apply(this, arguments)
 }
 
+const dbMain = require(path.join(__dirname, 'cloudfunctions/db/index.js')).main
 const CF = {
   login: require(path.join(__dirname, 'cloudfunctions/login/index.js')).main,
-  db: require(path.join(__dirname, 'cloudfunctions/db/index.js')).main,
+  db: event => dbMain({ ...event, data: { tripId: 'legacy-trip', ...(event.data || {}) } }),
   getStats: require(path.join(__dirname, 'cloudfunctions/getStats/index.js')).main,
   settle: require(path.join(__dirname, 'cloudfunctions/settle/index.js')).main
 }
@@ -138,9 +174,11 @@ global.wx = {
   previewImage(o) { PREVIEWED.push(o) },
   getStorageSync(k) { return STORAGE[k] === undefined ? '' : STORAGE[k] },
   setStorageSync(k, v) { STORAGE[k] = v },
+  removeStorageSync(k) { delete STORAGE[k] },
   showLoading() {}, hideLoading() {},
   showModal(o) { if (o.success) o.success({ confirm: MODAL_ANSWER, cancel: !MODAL_ANSWER }) },
   navigateTo(o) { NAV_STACK.push(o.url) },
+  redirectTo(o) { NAV_STACK.push('REDIRECT:' + o.url) },
   // 不碰 NAV_STACK：页面里有很多 setTimeout(navigateBack, 600)，会干扰后续路由断言
   navigateBack() { BACK_COUNT++ },
   reLaunch(o) { NAV_STACK.length = 0; NAV_STACK.push('RELAYOUT:' + o.url) },
@@ -192,7 +230,13 @@ function loadPage(name) {
 // ==================== 走一遍真实用户流程 ====================
 ;(async () => {
   // ---- 场景 0：干净的云环境 ----
-  CURRENT = { collections: {}, openId: 'o_zheng' }
+  CURRENT = {
+    collections: {
+      trips: [{ _id: 'legacy-trip', name: '贵州广西游', startDate: '2026-10-01', endDate: '2026-10-07' }],
+      members: [], records: [], schedule: [], tripMembers: [], tripInvites: []
+    },
+    openId: 'o_zheng'
+  }
 
   // ---- 场景 1：首次打开 → app.js onLaunch → login 云函数 ----
   delete require.cache[require.resolve(path.join(__dirname, 'miniprogram/app.js'))]
@@ -208,12 +252,18 @@ function loadPage(name) {
   loginPage.onInput({ detail: { value: '  小郑  ' } })
   eq(loginPage.data.name, '  小郑  ', 'E2E-2 输入框双向绑定')
   await loginPage.onSubmit()
-  // login 页注册成功后延时 600ms 才 switchTab，必须等定时器跑完再断言路由
+  // 登录后进入旅程选择页
   await sleep(750)
   eq(APP_INSTANCE.globalData.currentMember.name, '小郑', 'E2E-2 注册后名字已 trim 并写入全局')
-  eq(NAV_STACK[0], 'TAB:/pages/trip/index', 'E2E-2 注册成功跳行程 Tab')
-  eq(APP_INSTANCE.globalData.currentTrip.name, '国庆川西行', 'E2E-2 自动创建默认旅程')
-  step('E2E-2 首次起名 → 自动建旅程 → 跳 Tab1')
+  eq(NAV_STACK[0], 'RELAYOUT:/pages/trip-select/index', 'E2E-2 注册成功进入旅程选择页')
+  eq(APP_INSTANCE.globalData.currentTrip, null, 'E2E-2 登录后先选择旅程')
+  const selector = loadPage('trip-select')
+  await selector.onLoad()
+  eq(selector.data.trips.length, 1, 'E2E-2 旧旅程迁移后对创建人可见')
+  eq(selector.data.trips[0].name, '贵州广西游', 'E2E-2 旧旅程名称保留')
+  selector.onTripTap({ currentTarget: { dataset: { id: 'legacy-trip' } } })
+  eq(APP_INSTANCE.globalData.currentTrip._id, 'legacy-trip', 'E2E-2 选择旅程后设置当前旅程')
+  step('E2E-2 首次起名 → 登录后选择迁移的旧旅程')
 
   // 空名字被拦
   NAV_STACK.length = 0; TOASTS.length = 0
@@ -248,19 +298,42 @@ function loadPage(name) {
   const loginPage4 = loadPage('login')
   NAV_STACK.length = 0
   await loginPage4.onLoad()
-  eq(NAV_STACK[0], 'TAB:/pages/trip/index', 'E2E-2d 已注册用户进 login 页自动跳行程')
+  eq(NAV_STACK[0], 'RELAYOUT:/pages/trip-select/index', 'E2E-2d 已注册用户进 login 页自动跳旅程选择')
   PAGE_STACK.pop()
 
-  // ---- 场景 3：朋友加入同一旅程 ----
+  // ---- 场景 3：朋友通过单次邀请加入旅程 ----
   const savedOpenId = CURRENT.openId
+  const creatorTripId = APP_INSTANCE.globalData.currentTrip._id
+  const inviteRes = await CF.db({ action: 'createInvite', data: { tripId: creatorTripId } })
   CURRENT.openId = 'o_friend'
-  const tripCountBefore = CURRENT.collections.trips.length
   const res3 = await CF.login({ name: '小万' })
-  eq(res3.trip._id, APP_INSTANCE.globalData.currentTrip._id, 'E2E-3 朋友加入同一旅程（trip._id 一致）')
-  eq(CURRENT.collections.trips.length, tripCountBefore, 'E2E-3 未重复创建旅程')
+  eq(res3.trips.length, 0, 'E2E-3 新注册用户未被自动加入旅程')
+  const joinedRes = await CF.db({ action: 'joinTrip', data: { token: inviteRes.token } })
+  eq(joinedRes.success, true, 'E2E-3 接受邀请后加入旅程')
+  const friendTripList = await CF.db({ action: 'listTrips' })
+  eq(friendTripList.list[0]._id, creatorTripId, 'E2E-3 受邀旅程出现在成员列表')
   eq(CURRENT.collections.members.length, 2, 'E2E-3 成员数 = 2')
+  const secondFriendId = 'o_friend2'
+  CURRENT.openId = secondFriendId
+  await CF.login({ name: '小周' })
+  const replay = await CF.db({ action: 'joinTrip', data: { token: inviteRes.token } })
+  eq(replay.code, 'INVITE_USED', 'E2E-3 邀请链接不能被第二个新成员使用')
   CURRENT.openId = savedOpenId
-  step('E2E-3 第二个用户注册 → 复用同一旅程，成员 2 人')
+  step('E2E-3 创建人邀请 → 一位新成员加入，链接阻止第二人使用')
+
+  const alreadyInvite = await CF.db({ action: 'createInvite', data: { tripId: creatorTripId } })
+  const invitePage = loadPage('trip-invite')
+  await invitePage.onLoad({ token: alreadyInvite.token })
+  eq(invitePage.data.trip.name, '贵州广西游', 'E2E-3b 邀请页展示旅程信息')
+  eq(invitePage.data.alreadyMember, true, 'E2E-3b 已有成员识别为已加入')
+  await invitePage.onJoinTap()
+  eq(APP_INSTANCE.globalData.currentTrip._id, creatorTripId, 'E2E-3b 已有成员可从邀请页进入旅程')
+  PAGE_STACK.pop()
+  const invalidInvitePage = loadPage('trip-invite')
+  await invalidInvitePage.onLoad({ token: 'invalid-token' })
+  eq(invalidInvitePage.data.trip, null, 'E2E-3c 无效邀请不展示旅程')
+  eq(STORAGE.pendingInviteToken, undefined, 'E2E-3c 无效邀请清理待处理 token')
+  PAGE_STACK.pop()
 
   const me = APP_INSTANCE.globalData.currentMember
   const friend = CURRENT.collections.members.find(m => m.openId === 'o_friend')
@@ -438,6 +511,7 @@ function loadPage(name) {
   eq(schPage4.data.costRecordId, null, 'E2E-8e 初始未关联')
   assert(schPage4.data.recordOptions.some(r => r._id === day3Record._id), 'E2E-8e 可关联列表含 Day 3 那笔')
   const optIdx = schPage4.data.recordOptions.findIndex(r => r._id === day3Record._id)
+  assert(optIdx >= 0, 'E2E-8e 关联账目应在当前旅程内加载')
   eq(schPage4.data.recordOptions[optIdx].amountYuan, '260.00', 'E2E-8e 可关联金额展示 ¥260.00')
   eq(schPage4.data.recordOptions[optIdx].icon, getCategory(day3Record.category).icon, 'E2E-8e 关联项带分类图标')
   eq(schPage4.data.recordPickerRange.length, schPage4.data.recordOptions.length + 1, 'E2E-8e picker 末项为清除关联')
@@ -648,14 +722,14 @@ function loadPage(name) {
   await minePage.onLoad()
   eq(minePage.data.member.name, '小郑', 'E2E-11 我的页显示名字')
   eq(minePage.data.avatarText, '小', 'E2E-11 头像取名字首字')
-  eq(minePage.data.trip.name, '国庆川西行', 'E2E-11 显示旅程名')
+  eq(minePage.data.trip.name, '贵州广西游', 'E2E-11 显示旅程名')
   NAV_STACK.length = 0
   minePage.onTripSettingTap()
   eq(NAV_STACK[0], '/pages/trip-setting/index', 'E2E-11 点击进入旅程设置')
 
   const setPage = loadPage('trip-setting')
   await setPage.onLoad()
-  eq(setPage.data.name, '国庆川西行', 'E2E-11b 旅程名回填')
+  eq(setPage.data.name, '贵州广西游', 'E2E-11b 旅程名回填')
   eq(setPage.data.startDate, '2026-10-01', 'E2E-11b 出发日回填')
   eq(setPage.data.endDate, '2026-10-07', 'E2E-11b 返回日回填')
   setPage.onNameInput({ detail: { value: '稻城亚丁环线' } })
@@ -792,12 +866,39 @@ function loadPage(name) {
   eq(todoTrip.data.prepDone, 1, 'E2E-13h 刷新后完成态与服务端一致')
   step('E2E-13 行程节点待办与备忘（编辑页增删勾选 + 行程页直接勾选 + 准备进度汇总）')
 
+  // ---- 场景 14：多旅程切换和成员数据隔离 ----
+  const selector2 = loadPage('trip-select')
+  await selector2.onLoad()
+  selector2.onCreateTap()
+  selector2.onNameInput({ detail: { value: '海边周末' } })
+  selector2.onStartDateChange({ detail: { value: '2026-11-01' } })
+  selector2.onEndDateChange({ detail: { value: '2026-11-03' } })
+  await selector2.onCreateSubmit()
+  const secondTrip = APP_INSTANCE.globalData.currentTrip
+  eq(secondTrip.name, '海边周末', 'E2E-14 创建新旅程并进入')
+  eq(secondTrip.role, 'creator', 'E2E-14 创建人自动获得 creator 角色')
+  await tripPage.onShow()
+  eq(tripPage.data.totalItemCount, 0, 'E2E-14 切换后行程列表不显示旧旅程内容')
+  const secondLedger = loadPage('ledger')
+  await secondLedger.onLoad()
+  eq(secondLedger.data.recordCount, 0, 'E2E-14 新旅程账单与旧旅程隔离')
+  const secondStats = loadPage('stats')
+  await secondStats.onLoad()
+  eq(secondStats.data.count, 0, 'E2E-14 新旅程统计与旧旅程隔离')
+
+  CURRENT.openId = 'o_friend'
+  const friendTrip = await CF.db({ action: 'createTrip', data: { name: '朋友自己的旅程', startDate: '2026-11-01', endDate: '2026-11-02' } })
+  CURRENT.openId = savedOpenId
+  const forbidden = await dbMain({ action: 'listRecords', data: { tripId: friendTrip.trip._id } })
+  eq(forbidden.code, 'NOT_TRIP_MEMBER', 'E2E-14 非成员不能读取其他人的旅程')
+  step('E2E-14 多旅程切换、账单/统计隔离与非成员访问拦截')
+
   // ==================== 汇总 ====================
   console.log('')
   oks.forEach(o => console.log('  ✓ ' + o))
   console.log('')
   if (fail === 0) {
-    console.log(`==== E2E 全部通过：${pass} 条断言 / 0 失败（覆盖 13 个场景）====`)
+    console.log(`==== E2E 全部通过：${pass} 条断言 / 0 失败（覆盖 14 个场景）====`)
   } else {
     console.log(`==== E2E ${fail} 条失败（通过 ${pass}）====`)
     fails.forEach(f => console.log('  ✗ ' + f))

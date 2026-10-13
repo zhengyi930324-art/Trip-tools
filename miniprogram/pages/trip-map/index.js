@@ -28,7 +28,7 @@ Page({
     try {
       const res = await wx.cloud.callFunction({
         name: 'db',
-        data: { action: 'listSchedule' }
+        data: { action: 'listSchedule', data: { tripId: app.globalData.currentTrip._id } }
       })
       const list = (res.result && res.result.list) || []
       const trip = app.globalData.currentTrip

@@ -1,6 +1,5 @@
 // pages/login/index.js
 const app = getApp()
-const { ensureLogin } = require('../../utils/auth')
 
 Page({
   data: {
@@ -31,11 +30,8 @@ Page({
   },
 
   async onLoad() {
-    // 已注册过就直接进主页面，不再让用户重复输名字
-    const data = await ensureLogin()
-    if (data) {
-      wx.switchTab({ url: '/pages/trip/index' })
-    }
+    if (app.globalData.loginReady) await app.globalData.loginReady
+    if (app.globalData.currentMember) this.continueAfterLogin()
   },
 
   onInput(e) {
@@ -65,15 +61,23 @@ Page({
         throw new Error((res && res.error) || '注册失败')
       }
       wx.showToast({ title: '欢迎，' + name, icon: 'success', duration: 800 })
-      setTimeout(() => {
-        wx.switchTab({ url: '/pages/trip/index' })
-      }, 600)
+      setTimeout(() => this.continueAfterLogin(), 600)
     } catch (err) {
       console.error('[login] 注册失败', err)
       this.setData({
         loading: false,
         errMsg: this.describeError(err)
       })
+    }
+  },
+
+  continueAfterLogin() {
+    const token = app.globalData.pendingInviteToken || wx.getStorageSync('pendingInviteToken')
+    if (token) {
+      app.globalData.pendingInviteToken = token
+      wx.redirectTo({ url: `/pages/trip-invite/index?token=${token}` })
+    } else {
+      wx.reLaunch({ url: '/pages/trip-select/index' })
     }
   },
 
@@ -87,7 +91,7 @@ Page({
       return '云开发环境不对：检查 app.js 里的 env 是否等于你控制台的环境 ID'
     }
     if (/collection.*not.*exist|database/i.test(msg)) {
-      return '数据库集合还没建好：到云开发控制台手动建 trips/members/schedule/records'
+      return '数据库集合还没建好：到云开发控制台手动建 trips/members/schedule/records/tripMembers/tripInvites'
     }
     if (/timeout|network|request:fail/i.test(msg)) {
       return '网络不通：检查网络后重试'

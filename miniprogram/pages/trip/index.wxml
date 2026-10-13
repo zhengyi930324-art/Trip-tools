@@ -1,15 +1,23 @@
 <view class="page">
   <!-- 顶部旅程信息 -->
   <view class="trip-header" wx:if="{{trip}}">
-    <view class="trip-header-info" bindtap="onTripSettingTap">
-      <view class="trip-name">
-        {{trip.name}}
-        <text class="edit-hint">›</text>
+    <view class="trip-header-main">
+      <view class="trip-header-info" bindtap="onTripSettingTap">
+        <view class="trip-name">
+          {{trip.name}}
+          <text class="edit-hint" wx:if="{{trip.role === 'creator'}}">›</text>
+        </view>
+        <view class="trip-date">{{trip.startDate}} 至 {{trip.endDate}}</view>
       </view>
-      <view class="trip-date">{{trip.startDate}} 至 {{trip.endDate}}</view>
+      <view class="trip-switch-btn" catchtap="onTripSelectTap">
+        <text class="trip-switch-icon">⇄</text>
+      </view>
     </view>
     <!-- 右侧入口：路线总览大图 + 行程地图 -->
     <view class="trip-header-actions">
+      <view wx:if="{{trip.role === 'creator' && inviteReady}}" class="share-btn-wrap">
+        <button class="trip-map-btn share-btn" open-type="share">邀请成员</button>
+      </view>
       <view class="trip-map-btn" catchtap="onMapTap">行程总览</view>
       <view class="trip-map-btn" catchtap="onMapPageTap">地图</view>
     </view>
@@ -170,8 +178,10 @@
   <view class="bottom-space"></view>
 </view>
 
-<!-- 悬浮新增按钮 -->
-<view class="fab" bindtap="onAddTap">+</view>
+<!-- 可拖动新增按钮 -->
+<movable-area class="fab-area">
+  <movable-view class="fab" direction="all" inertia="false" x="{{fabX}}" y="{{fabY}}" bindtap="onAddTap"><view class="fab-plus">+</view></movable-view>
+</movable-area>
 
 <!-- 加载态 -->
 <view class="loading-mask" wx:if="{{loading}}">

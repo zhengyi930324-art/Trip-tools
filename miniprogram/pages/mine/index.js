@@ -57,5 +57,9 @@ Page({
 
   onTripSettingTap() {
     wx.navigateTo({ url: '/pages/trip-setting/index' })
+  },
+
+  onTripSelectTap() {
+    wx.navigateTo({ url: '/pages/trip-select/index?choose=1' })
   }
 })
